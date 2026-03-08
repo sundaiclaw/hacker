@@ -1,5 +1,12 @@
 # sundai-project-pipeline changelog
 
+## v1.2.0 - 2026-03-08
+- Made AI integration mandatory for every project (no rule-only projects).
+- Standardized AI provider to Compute Community endpoint via env vars (`CC_API_KEY`, `CC_BASE_URL`, `CC_MODEL`).
+- Added AI endpoint reference file with Python integration snippet.
+- Extended demo smoke test to require one AI-backed interaction success.
+- Updated operational checklist to include AI enforcement and 100-project ideation checks.
+
 ## v1.1.0 - 2026-03-08
 - Ideation now scores 3 candidates with rubric (novelty, pain urgency, demo wow, feasibility, likely engagement).
 - Added mandatory demo smoke test step (HTTP check + basic interaction).

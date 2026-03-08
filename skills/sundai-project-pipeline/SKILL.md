@@ -32,8 +32,14 @@ Execute a complete Sundai shipping run with no skipped steps. Default to this pi
    - If user already gave a fixed idea, keep it; otherwise pick the best idea from this step.
    - Keep project title <= 32 chars and brief description <= 100 chars.
 
-2. **Build MVP + create NEW GitHub repo + push**
+2. **Build MVP with mandatory AI integration + create NEW GitHub repo + push**
    - Create a minimal but runnable MVP.
+   - **Mandatory:** each project must use AI in-product via Compute Community endpoint.
+   - Use this provider config (from environment variables, never hardcode secrets):
+     - `CC_BASE_URL=https://computecommunity.com/sundai-server/v1`
+     - `CC_MODEL=MiniMaxAI/MiniMax-M2.5`
+     - `CC_API_KEY=<secret>`
+   - Implement at least one real LLM call in the app flow (not mock/rules-only).
    - Create a **new public GitHub repo for this run** (no reusing old project repos).
    - Push code and verify repo URL resolves publicly.
    - Capture repo URL for Sundai `GitHub URL` field.
@@ -85,6 +91,7 @@ Execute a complete Sundai shipping run with no skipped steps. Default to this pi
      - `curl -I -L <Demo URL>` returns 200-range status
      - homepage loads in browser without obvious runtime error
      - at least one key interaction path works
+     - at least one **AI-backed** interaction path works end-to-end
    - If smoke test fails, fix and redeploy before continuing.
 
 11. **Update Sundai Demo URL (mandatory)**
@@ -140,5 +147,15 @@ When user says short commands like:
 
 Interpret as: run the full workflow above, including team member, post-save verification, publish, and GitHub About/README sync.
 
+## Local Environment (required)
+- Ensure local env file exists at workspace root: `.env.sundai`.
+- Required keys:
+  - `CC_API_KEY`
+  - `CC_BASE_URL=https://computecommunity.com/sundai-server/v1`
+  - `CC_MODEL=MiniMaxAI/MiniMax-M2.5`
+- Load these vars before running local tests/deploy scripts.
+- Never commit API keys into repo code/README.
+
 ## Reference
 - Use `references/checklist.md` as a run checklist and copy-safe description template.
+- Use `references/ai-endpoint.md` for integration snippet/pattern.
