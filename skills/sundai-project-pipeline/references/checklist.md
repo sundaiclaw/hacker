@@ -1,6 +1,7 @@
 # Sundai Pipeline Checklist
 
 ## Required checks before publish
+- [ ] Progress updates sent at each major phase (numbered checkpoints)
 - [ ] Reviewed latest 100 approved projects from `/api/projects?status=APPROVED`
 - [ ] Picked 5-10 top-liked projects for inspiration
 - [ ] Generated 3 candidate ideas and scored with rubric (novelty, urgency, demo wow, feasibility, likely engagement)
@@ -10,8 +11,10 @@
 - [ ] MVP includes real AI call (not mock/rules-only)
 - [ ] AI integration uses Compute Community endpoint via env vars (`CC_API_KEY`, `CC_BASE_URL`, `CC_MODEL`)
 - [ ] GitHub repo exists and is pushed (new repo for this run)
-- [ ] GitHub URL filled in Sundai edit page
-- [ ] Demo URL filled and verified
+- [ ] Project create executed via API (or UI fallback documented)
+- [ ] Project fields updated via API patch (or UI fallback documented)
+- [ ] GitHub URL persisted (API readback or UI reload verify)
+- [ ] Demo URL persisted (API readback or UI reload verify)
 - [ ] One-liner filled
 - [ ] Full description uses real paragraphs (no literal `\\n`)
 - [ ] Team member `vyahhi` added

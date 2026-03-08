@@ -1,5 +1,9 @@
 # sundai-project-pipeline changelog
 
+## v1.4.0 - 2026-03-08
+- Enforced strict no-skip/no-reorder execution rule for checklist steps.
+- Enforced immediate link sharing as soon as URLs are available (GitHub, deploy, Sundai).
+
 ## v1.3.0 - 2026-03-08
 - Added mandatory runtime communication: step-by-step checklist progress updates during runs.
 - Added requirement to provide milestone updates in long runs plus final checklist recap.

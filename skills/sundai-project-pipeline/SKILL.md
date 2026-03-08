@@ -8,11 +8,20 @@ description: End-to-end Sundai Club project shipping workflow from idea to code 
 ## Overview
 Execute a complete Sundai shipping run with no skipped steps. Default to this pipeline for any Sundai project request unless the user explicitly asks for a partial action.
 
+## Progress Reporting (mandatory)
+During execution, emit concise live status updates after each major phase using numbered checkpoints:
+- `1/12 ...` through `12/12 ...`
+- Include concrete outputs as soon as available (repo URL, Render URL, Sundai URL)
+- If blocked, report exact blocker and current step number
+- Do not stay silent for long-running phases; send periodic progress updates
+
 ## Runtime communication (mandatory)
 - Be verbal while running the pipeline.
 - Print checklist progress as steps complete (e.g., `✅ 3/15 Repo created`, `🔄 7/15 Publishing`, `⚠️ 10/15 Smoke test failed, retrying`).
+- **Do not skip or renumber steps**; execute strictly in order and report every step.
 - Send concise milestone updates during long runs, not just a final summary.
 - End with a compact checklist recap showing status for each major step.
+- **Share links immediately when available** (GitHub repo, deploy URL, Sundai project URL) instead of waiting for final summary.
 
 ## Workflow (always in order)
 
@@ -50,36 +59,38 @@ Execute a complete Sundai shipping run with no skipped steps. Default to this pi
    - Push code and verify repo URL resolves publicly.
    - Capture repo URL for Sundai `GitHub URL` field.
 
-3. **Create Sundai project** (`/projects/new`)
-   - Fill: `Project Title`, `Brief Description`, `Launch Lead`.
-   - Add team member **vyahhi** (Nikolay Vyahhi) during this create step.
-   - Click **Create Project**.
+3. **Create Sundai project (API-first)**
+   - Prefer direct API request to create project (do not start with UI clicks when API works).
+   - Include: `Project Title`, `Brief Description`, `Launch Lead`, and team member **vyahhi** (Nikolay Vyahhi).
+   - Capture `projectId` and canonical project URL.
+   - If API create fails (auth/validation), use UI create flow as fallback.
 
-4. **Edit details** (`/projects/{id}/edit`)
+4. **Edit details (API-first)**
+   - Prefer API update for project fields.
    - Fill at minimum:
      - GitHub URL
+     - Demo URL (once deploy is live)
      - One Sentence Description
      - Full Description
      - Start Date
    - In **Full Description**, use real paragraph breaks (actual newlines), never literal `\n`.
-   - Click **Save Changes**.
+   - If API update fails, use UI edit flow as fallback.
 
 5. **Required defaults for every project**
-   - Ensure team member **vyahhi** (Nikolay Vyahhi) is present (added during create step).
+   - Ensure team member **vyahhi** (Nikolay Vyahhi) is present (set during create/update API call).
    - Skip AI thumbnail generation for now (feature is unreliable on Sundai site).
-   - Save again.
 
 6. **Post-save verification (mandatory)**
-   - Reload `/projects/{id}/edit` after saving.
+   - Verify persisted fields via API readback first; use UI reload check as fallback.
    - Verify all are still present (not empty/null):
      - GitHub URL
      - Full Description
      - Team member `vyahhi`
-   - If any field is missing, refill and save again before publish.
+   - If any field is missing, patch again and re-verify before publish.
 
-7. **Publish/submit**
-   - Use the **Submit** button on project page.
-   - API equivalent: `PATCH /api/projects/{projectId}/submit`.
+7. **Publish/submit (API-first)**
+   - Prefer `PATCH /api/projects/{projectId}/submit`.
+   - Fallback: UI Submit button.
    - Success check: project shows **Delist** (or submit call returns 200).
 
 8. **Like your own project (mandatory)**
@@ -100,10 +111,10 @@ Execute a complete Sundai shipping run with no skipped steps. Default to this pi
      - at least one **AI-backed** interaction path works end-to-end
    - If smoke test fails, fix and redeploy before continuing.
 
-11. **Update Sundai Demo URL (mandatory)**
-   - Open Sundai edit page and set `Demo URL` to the live deployed URL.
-   - Save changes.
-   - Reload edit page and verify `Demo URL` persisted.
+11. **Update Sundai Demo URL (API-first, mandatory)**
+   - Set `Demo URL` to the live deployed URL via API patch.
+   - Verify via API readback that `Demo URL` persisted.
+   - Fallback: update in UI edit page, save, reload, verify.
 
 12. **Sync GitHub About (mandatory verification)**
    - Set repo description = project one-liner.
@@ -165,3 +176,4 @@ Interpret as: run the full workflow above, including team member, post-save veri
 ## Reference
 - Use `references/checklist.md` as a run checklist and copy-safe description template.
 - Use `references/ai-endpoint.md` for integration snippet/pattern.
+- Use `references/sundai-api-mode.md` for API-first request patterns and fallback rules.
