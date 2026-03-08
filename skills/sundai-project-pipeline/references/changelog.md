@@ -1,5 +1,9 @@
 # sundai-project-pipeline changelog
 
+## v1.3.0 - 2026-03-08
+- Added mandatory runtime communication: step-by-step checklist progress updates during runs.
+- Added requirement to provide milestone updates in long runs plus final checklist recap.
+
 ## v1.2.0 - 2026-03-08
 - Made AI integration mandatory for every project (no rule-only projects).
 - Standardized AI provider to Compute Community endpoint via env vars (`CC_API_KEY`, `CC_BASE_URL`, `CC_MODEL`).

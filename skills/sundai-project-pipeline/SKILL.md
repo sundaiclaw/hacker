@@ -8,6 +8,12 @@ description: End-to-end Sundai Club project shipping workflow from idea to code 
 ## Overview
 Execute a complete Sundai shipping run with no skipped steps. Default to this pipeline for any Sundai project request unless the user explicitly asks for a partial action.
 
+## Runtime communication (mandatory)
+- Be verbal while running the pipeline.
+- Print checklist progress as steps complete (e.g., `✅ 3/15 Repo created`, `🔄 7/15 Publishing`, `⚠️ 10/15 Smoke test failed, retrying`).
+- Send concise milestone updates during long runs, not just a final summary.
+- End with a compact checklist recap showing status for each major step.
+
 ## Workflow (always in order)
 
 1. **Research-informed ideation (mandatory)**
