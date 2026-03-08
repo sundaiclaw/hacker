@@ -11,14 +11,15 @@ Execute a complete Sundai shipping run with no skipped steps. Default to this pi
 ## Workflow (always in order)
 
 1. **Research-informed ideation (mandatory)**
-   - Before choosing an idea, analyze the latest 20 approved Sundai projects from:
+   - Before choosing an idea, analyze the latest 100 approved Sundai projects from:
      - `https://www.sundai.club/api/projects?status=APPROVED`
+   - From those, identify 5-10 top-liked projects for inspiration.
    - Compare project themes and observed engagement (`likes` count/length) to avoid weak or repetitive ideas.
    - Add **fresh external signal scan** (web/news) before final idea choice:
      - Use web search to pull recent agentic AI trends, launches, failures, and hot debates.
      - Prefer very recent signals (last days/weeks) and concrete shifts (new tools, policy changes, workflows, pain points).
    - Generate 3 candidate ideas, then choose 1 that is:
-     - clearly differentiated from recent Sundai approvals
+     - clearly differentiated from your and others recent Sundai projects
      - demoable in minutes
      - **creative/radical** in agentic AI angle (not generic "chatbot" or wrapper)
      - tied to a real current pain point from the external scan
