@@ -18,7 +18,13 @@ Execute a complete Sundai shipping run with no skipped steps. Default to this pi
    - Add **fresh external signal scan** (web/news) before final idea choice:
      - Use web search to pull recent agentic AI trends, launches, failures, and hot debates.
      - Prefer very recent signals (last days/weeks) and concrete shifts (new tools, policy changes, workflows, pain points).
-   - Generate 3 candidate ideas, then choose 1 that is:
+   - Generate 3 candidate ideas, score each with this rubric (1-5 each), then choose highest total:
+     - novelty/differentiation vs recent your+others projects
+     - urgency of pain point
+     - demo wow factor
+     - feasibility in one run
+     - likely engagement (likes/comments)
+   - Pick 1 that is:
      - clearly differentiated from your and others recent Sundai projects
      - demoable in minutes
      - **creative/radical** in agentic AI angle (not generic "chatbot" or wrapper)
@@ -68,31 +74,41 @@ Execute a complete Sundai shipping run with no skipped steps. Default to this pi
    - On the project page, click the heart/Like button.
    - Verify liked state (active heart and/or incremented like count).
 
-9. **Deploy to Render (mandatory)**
-   - Use Render CLI to deploy each project.
-   - If no Render service exists for the repo, create one first (web service) in the active workspace.
-   - Trigger deploy and capture service URL + service id.
-   - If deployment fails, stop and report exact Render error.
+9. **Deploy (mandatory)**
+   - Deploy each project (Render by default; static projects may use GitHub Pages).
+   - If no deploy target/service exists for the repo, create one first.
+   - Capture live `Demo URL` and deployment id/reference.
+   - If deployment fails, stop and report exact error.
 
-9. **Update Sundai Demo URL from Render (mandatory)**
-   - Open Sundai edit page and set `Demo URL` to the deployed Render URL.
+10. **One-click demo test (mandatory)**
+   - Run a demo smoke test before finalizing:
+     - `curl -I -L <Demo URL>` returns 200-range status
+     - homepage loads in browser without obvious runtime error
+     - at least one key interaction path works
+   - If smoke test fails, fix and redeploy before continuing.
+
+11. **Update Sundai Demo URL (mandatory)**
+   - Open Sundai edit page and set `Demo URL` to the live deployed URL.
    - Save changes.
    - Reload edit page and verify `Demo URL` persisted.
 
-10. **Sync GitHub About (mandatory verification)**
+12. **Sync GitHub About (mandatory verification)**
    - Set repo description = project one-liner.
    - Set repo homepage = Sundai project URL.
    - Verify About fields actually saved on GitHub before finalizing (e.g., `gh repo view <owner/repo> --json description,homepageUrl`).
    - If description or homepage is empty/mismatched, fix immediately before marking run complete.
 
-11. **Update GitHub README**
-   - Ensure README includes a **How to Run (from zero)** section with full local setup steps:
-     1) prerequisites
-     2) `git clone <repo-url>`
-     3) `cd <repo-folder>`
-     4) dependency install (if any)
-     5) run command
-     6) local URL to open
+13. **Update GitHub README + lint**
+   - Ensure README includes required sections:
+     - What it does (short description)
+     - **How to Run (from zero)** with full local setup steps:
+       1) prerequisites
+       2) `git clone <repo-url>`
+       3) `cd <repo-folder>`
+       4) dependency install (if any)
+       5) run command
+       6) local URL to open
+     - Limitations / known gaps
    - Add two separate lines to `README.md` (create section if needed):
      - `Build on Sundai Club on Month D, YYYY`
      - `Sundai Project: <Sundai Project URL>`
@@ -101,7 +117,15 @@ Execute a complete Sundai shipping run with no skipped steps. Default to this pi
    - Keep project URL on its own line, separate from the date line.
    - Commit and push the README change.
 
-12. **Return final artifacts**
+14. **Version + changelog (mandatory)**
+   - Keep a pipeline version and changelog at `references/changelog.md`.
+   - On every pipeline rule change, append:
+     - date/time
+     - version bump (semantic or incremental)
+     - concise list of changed rules
+   - Mirror updated skill files to `sundaiclaw/hacker`.
+
+15. **Return final artifacts**
    - Reply with:
      - GitHub repo URL
      - Sundai project URL
