@@ -1,5 +1,11 @@
 # sundai-project-pipeline changelog
 
+## v1.7.0 - 2026-03-08
+- Verified `sundai-api-mode.md` against `sundai-website-v2` code/tests.
+- Corrected submit API contract: `PATCH /api/projects/{id}/submit` must include JSON body `{ "status": "APPROVED" }` (or `DRAFT` for delist).
+- Added guardrail to preserve `participants` in edit PATCH to prevent accidental team-member removal.
+- Clarified create `members` payload shape and endpoint list as code-verified.
+
 ## v1.6.0 - 2026-03-08
 - Fixed team-member reliability: if API assignment does not persist, pipeline now must use UI add-member fallback and re-verify `vyahhi` before publish.
 

@@ -13,6 +13,8 @@
 - [ ] GitHub repo exists and is pushed (new repo for this run)
 - [ ] Project create executed via cookie-backed API (or UI fallback documented)
 - [ ] Project fields updated via cookie-backed API patch (or UI fallback documented)
+- [ ] Edit PATCH preserved existing `participants` (no accidental team wipe)
+- [ ] Submit API call sent JSON body `{ "status": "APPROVED" }`
 - [ ] GitHub URL persisted (API readback or UI reload verify)
 - [ ] Demo URL persisted (API readback or UI reload verify)
 - [ ] One-liner filled

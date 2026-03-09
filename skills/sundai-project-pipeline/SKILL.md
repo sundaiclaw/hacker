@@ -63,11 +63,14 @@ During execution, emit concise live status updates after each major phase using 
    - Reuse authenticated Sundai browser session (cookies) for API calls.
    - Prefer API create; do not start with UI clicks when API path works.
    - Include: `Project Title`, `Brief Description`, `Launch Lead`, and team member **vyahhi** (Nikolay Vyahhi).
+   - For API create, send `members` as structured objects (`id`, `role`) — not usernames/handles.
    - Capture `projectId` and canonical project URL.
    - If API create fails after session refresh/retry, use UI create flow as fallback.
 
 4. **Edit details (cookie-backed API first)**
    - Prefer API update for project fields using the authenticated browser session cookies.
+   - Read current project first and preserve `participants` in PATCH payload unless intentionally changing team.
+   - Do not send empty `participants` by default.
    - Fill at minimum:
      - GitHub URL
      - Demo URL (once deploy is live)
@@ -91,9 +94,9 @@ During execution, emit concise live status updates after each major phase using 
    - If any field is missing, patch again and re-verify before publish.
 
 7. **Publish/submit (cookie-backed API first)**
-   - Prefer `PATCH /api/projects/{projectId}/submit`.
+   - Prefer `PATCH /api/projects/{projectId}/submit` with JSON body `{ "status": "APPROVED" }`.
    - Treat 200 as success.
-   - If API returns 500, do not assume failure immediately; verify publish state.
+   - If API is non-200, verify publish state.
    - Verification order:
      1) check project page state (`Delist` visible) OR
      2) check project metadata indicates submitted/published.
