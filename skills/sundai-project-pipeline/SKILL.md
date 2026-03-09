@@ -90,8 +90,12 @@ During execution, emit concise live status updates after each major phase using 
 
 7. **Publish/submit (API-first)**
    - Prefer `PATCH /api/projects/{projectId}/submit`.
-   - Fallback: UI Submit button.
-   - Success check: project shows **Delist** (or submit call returns 200).
+   - Treat 200 as success.
+   - If API returns 500, do not assume failure immediately; verify publish state.
+   - Verification order:
+     1) check project page state (`Delist` visible) OR
+     2) check project metadata indicates submitted/published.
+   - If not published after verification, use UI Submit button as fallback.
 
 8. **Like your own project (mandatory)**
    - On the project page, click the heart/Like button.
@@ -142,6 +146,7 @@ During execution, emit concise live status updates after each major phase using 
    - Commit and push the README change.
 
 14. **Version + changelog (mandatory)**
+   - Keep API payload schemas current in `references/sundai-api-mode.md` when Sundai behavior changes.
    - Keep a pipeline version and changelog at `references/changelog.md`.
    - On every pipeline rule change, append:
      - date/time
