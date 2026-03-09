@@ -29,12 +29,15 @@
 - [ ] Submitted/published (`Delist` shown)
 - [ ] Liked own project and verified like count/state
 - [ ] Deployment completed and URL captured
-- [ ] Demo smoke test passed:
+- [ ] Immediate link sync completed before health wait:
+  - [ ] Sundai Demo URL updated + persisted
+  - [ ] GitHub About synced (description + homepage=Sundai URL)
+  - [ ] README Sundai date/project lines pushed
+- [ ] Demo smoke test passed (after link sync):
   - [ ] HTTP 200-range
   - [ ] homepage loads
   - [ ] one key interaction works
   - [ ] one AI-backed interaction works end-to-end
-- [ ] GitHub About synced (description + homepage=Sundai URL)
 - [ ] README includes: What it does, How to Run (from zero), Limitations
 - [ ] README includes `Build on Sundai Club on Month D, YYYY`
 - [ ] README includes `Sundai Project: PROJECT_URL` on separate rendered line and is pushed

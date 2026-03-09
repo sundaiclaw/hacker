@@ -112,24 +112,24 @@ During execution, emit concise live status updates after each major phase using 
    - Capture live `Demo URL` and deployment id/reference.
    - If deployment fails, stop and report exact error.
 
-10. **One-click demo test (mandatory)**
-   - Run a demo smoke test before finalizing:
+10. **Immediate link sync (mandatory, before health wait)**
+   - As soon as a deploy URL exists, update external cards/links first:
+     - Set Sundai `Demo URL` to deployed URL (API-first), save + verify persisted.
+     - Sync GitHub About (description + homepage=Sundai project URL), verify saved.
+     - Ensure README contains Sundai date/project link lines and push.
+   - Report these links immediately in progress updates.
+
+11. **One-click demo test (mandatory, can run after link sync)**
+   - Run a demo smoke test after link sync:
      - `curl -I -L <Demo URL>` returns 200-range status
      - homepage loads in browser without obvious runtime error
      - at least one key interaction path works
      - at least one **AI-backed** interaction path works end-to-end
-   - If smoke test fails, fix and redeploy before continuing.
+   - If deployment is still warming, wait/retry and report `waiting for live health` status.
+   - If smoke test fails after retries, fix and redeploy before finalizing.
 
-11. **Update Sundai Demo URL (API-first, mandatory)**
-   - Set `Demo URL` to the live deployed URL via API patch.
-   - Verify via API readback that `Demo URL` persisted.
-   - Fallback: update in UI edit page, save, reload, verify.
-
-12. **Sync GitHub About (mandatory verification)**
-   - Set repo description = project one-liner.
-   - Set repo homepage = Sundai project URL.
-   - Verify About fields actually saved on GitHub before finalizing (e.g., `gh repo view <owner/repo> --json description,homepageUrl`).
-   - If description or homepage is empty/mismatched, fix immediately before marking run complete.
+12. **Finalize publish surface checks**
+   - Confirm project remains published (`Delist` visible) and links still intact after health checks.
 
 13. **Update GitHub README + lint**
    - Ensure README includes required sections:

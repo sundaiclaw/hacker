@@ -1,5 +1,10 @@
 # sundai-project-pipeline changelog
 
+## v1.8.0 - 2026-03-08
+- Reordered post-deploy flow: perform immediate link sync (Sundai Demo URL + GitHub About + README Sundai lines) before waiting on live health checks.
+- Added explicit rule to report links right away, then run health retries/wait.
+- Added checklist coverage for "link sync before health wait" behavior.
+
 ## v1.7.0 - 2026-03-08
 - Verified `sundai-api-mode.md` against `sundai-website-v2` code/tests.
 - Corrected submit API contract: `PATCH /api/projects/{id}/submit` must include JSON body `{ "status": "APPROVED" }` (or `DRAFT` for delist).
