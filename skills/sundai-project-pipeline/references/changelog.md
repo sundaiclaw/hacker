@@ -1,5 +1,10 @@
 # sundai-project-pipeline changelog
 
+## v1.9.0 - 2026-03-08
+- Reordered pipeline to deploy immediately after build+GitHub push.
+- Demo URL is now captured early and used in Sundai edit/link sync steps.
+- Health checks remain later in flow (non-blocking for early card/link updates).
+
 ## v1.8.0 - 2026-03-08
 - Reordered post-deploy flow: perform immediate link sync (Sundai Demo URL + GitHub About + README Sundai lines) before waiting on live health checks.
 - Added explicit rule to report links right away, then run health retries/wait.

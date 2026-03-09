@@ -59,7 +59,13 @@ During execution, emit concise live status updates after each major phase using 
    - Push code and verify repo URL resolves publicly.
    - Capture repo URL for Sundai `GitHub URL` field.
 
-3. **Create Sundai project (cookie-backed API first)**
+3. **Deploy early (mandatory, after build/push)**
+   - Deploy immediately after GitHub push (Render by default; static projects may use GitHub Pages).
+   - If no deploy target/service exists for the repo, create one first.
+   - Capture live `Demo URL` and deployment id/reference as early as possible.
+   - Do **not** block here on full health checks; health validation runs later.
+
+4. **Create Sundai project (cookie-backed API first)**
    - Reuse authenticated Sundai browser session (cookies) for API calls.
    - Prefer API create; do not start with UI clicks when API path works.
    - Include: `Project Title`, `Brief Description`, `Launch Lead`, and team member **vyahhi** (Nikolay Vyahhi).
@@ -67,7 +73,7 @@ During execution, emit concise live status updates after each major phase using 
    - Capture `projectId` and canonical project URL.
    - If API create fails after session refresh/retry, use UI create flow as fallback.
 
-4. **Edit details (cookie-backed API first)**
+5. **Edit details (cookie-backed API first)**
    - Prefer API update for project fields using the authenticated browser session cookies.
    - Read current project first and preserve `participants` in PATCH payload unless intentionally changing team.
    - Do not send empty `participants` by default.
@@ -80,12 +86,12 @@ During execution, emit concise live status updates after each major phase using 
    - In **Full Description**, use real paragraph breaks (actual newlines), never literal `\n`.
    - If API update fails, use UI edit flow as fallback.
 
-5. **Required defaults for every project**
+6. **Required defaults for every project**
    - Ensure team member **vyahhi** (Nikolay Vyahhi) is present.
    - If API member assignment does not persist, immediately use UI `+ Add Team Members` fallback and re-save.
    - Skip AI thumbnail generation for now (feature is unreliable on Sundai site).
 
-6. **Post-save verification (mandatory)**
+7. **Post-save verification (mandatory)**
    - Verify persisted fields via API readback first; use UI reload check as fallback.
    - Verify all are still present (not empty/null):
      - GitHub URL
@@ -93,7 +99,7 @@ During execution, emit concise live status updates after each major phase using 
      - Team member `vyahhi`
    - If any field is missing, patch again and re-verify before publish.
 
-7. **Publish/submit (cookie-backed API first)**
+8. **Publish/submit (cookie-backed API first)**
    - Prefer `PATCH /api/projects/{projectId}/submit` with JSON body `{ "status": "APPROVED" }`.
    - Treat 200 as success.
    - If API is non-200, verify publish state.
@@ -102,15 +108,9 @@ During execution, emit concise live status updates after each major phase using 
      2) check project metadata indicates submitted/published.
    - If not published after verification, use UI Submit button as fallback.
 
-8. **Like your own project (mandatory)**
+9. **Like your own project (mandatory)**
    - On the project page, click the heart/Like button.
    - Verify liked state (active heart and/or incremented like count).
-
-9. **Deploy (mandatory)**
-   - Deploy each project (Render by default; static projects may use GitHub Pages).
-   - If no deploy target/service exists for the repo, create one first.
-   - Capture live `Demo URL` and deployment id/reference.
-   - If deployment fails, stop and report exact error.
 
 10. **Immediate link sync (mandatory, before health wait)**
    - As soon as a deploy URL exists, update external cards/links first:
@@ -119,7 +119,7 @@ During execution, emit concise live status updates after each major phase using 
      - Ensure README contains Sundai date/project link lines and push.
    - Report these links immediately in progress updates.
 
-11. **One-click demo test (mandatory, can run after link sync)**
+11. **One-click demo test (mandatory, runs later)**
    - Run a demo smoke test after link sync:
      - `curl -I -L <Demo URL>` returns 200-range status
      - homepage loads in browser without obvious runtime error
