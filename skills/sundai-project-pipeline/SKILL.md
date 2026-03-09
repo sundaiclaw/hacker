@@ -183,6 +183,8 @@ Interpret as: run the full workflow above, including team member, post-save veri
   - `CC_API_KEY`
   - `CC_BASE_URL=https://computecommunity.com/sundai-server/v1`
   - `CC_MODEL=MiniMaxAI/MiniMax-M2.5`
+  - `RENDER_API_KEY` (for isolated/non-interactive deploy steps)
+- Always load env first in runs (e.g., `set -a; source .env.sundai; set +a`).
 - Load these vars before running local tests/deploy scripts.
 - Never commit API keys into repo code/README.
 
