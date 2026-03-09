@@ -4,6 +4,7 @@ Use API calls first for speed/reliability. Use UI only as fallback.
 
 ## Principles
 - Prefer API for create/update/submit/verify.
+- Reuse authenticated browser session cookies for API calls (cookie-backed API mode).
 - Keep browser UI for auth bootstrap and fallback only.
 - After every write, do readback verification before proceeding.
 - Log which step used fallback when API fails.

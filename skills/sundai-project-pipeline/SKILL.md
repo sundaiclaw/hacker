@@ -59,14 +59,15 @@ During execution, emit concise live status updates after each major phase using 
    - Push code and verify repo URL resolves publicly.
    - Capture repo URL for Sundai `GitHub URL` field.
 
-3. **Create Sundai project (API-first)**
-   - Prefer direct API request to create project (do not start with UI clicks when API works).
+3. **Create Sundai project (cookie-backed API first)**
+   - Reuse authenticated Sundai browser session (cookies) for API calls.
+   - Prefer API create; do not start with UI clicks when API path works.
    - Include: `Project Title`, `Brief Description`, `Launch Lead`, and team member **vyahhi** (Nikolay Vyahhi).
    - Capture `projectId` and canonical project URL.
-   - If API create fails (auth/validation), use UI create flow as fallback.
+   - If API create fails after session refresh/retry, use UI create flow as fallback.
 
-4. **Edit details (API-first)**
-   - Prefer API update for project fields.
+4. **Edit details (cookie-backed API first)**
+   - Prefer API update for project fields using the authenticated browser session cookies.
    - Fill at minimum:
      - GitHub URL
      - Demo URL (once deploy is live)
@@ -88,7 +89,7 @@ During execution, emit concise live status updates after each major phase using 
      - Team member `vyahhi`
    - If any field is missing, patch again and re-verify before publish.
 
-7. **Publish/submit (API-first)**
+7. **Publish/submit (cookie-backed API first)**
    - Prefer `PATCH /api/projects/{projectId}/submit`.
    - Treat 200 as success.
    - If API returns 500, do not assume failure immediately; verify publish state.

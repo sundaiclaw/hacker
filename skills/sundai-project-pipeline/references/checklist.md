@@ -11,8 +11,8 @@
 - [ ] MVP includes real AI call (not mock/rules-only)
 - [ ] AI integration uses Compute Community endpoint via env vars (`CC_API_KEY`, `CC_BASE_URL`, `CC_MODEL`)
 - [ ] GitHub repo exists and is pushed (new repo for this run)
-- [ ] Project create executed via API (or UI fallback documented)
-- [ ] Project fields updated via API patch (or UI fallback documented)
+- [ ] Project create executed via cookie-backed API (or UI fallback documented)
+- [ ] Project fields updated via cookie-backed API patch (or UI fallback documented)
 - [ ] GitHub URL persisted (API readback or UI reload verify)
 - [ ] Demo URL persisted (API readback or UI reload verify)
 - [ ] One-liner filled
