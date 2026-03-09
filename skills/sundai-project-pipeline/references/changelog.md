@@ -1,5 +1,10 @@
 # sundai-project-pipeline changelog
 
+## v1.11.0 - 2026-03-08
+- Refined thumbnail flow: after generate-images API call, wait/poll briefly for images before selection.
+- Explicitly select first image (`images[0]`) after image list becomes available.
+- Keep mandatory thumbnail persistence verification after save/reload.
+
 ## v1.10.0 - 2026-03-08
 - Added API thumbnail generation step via `POST /api/projects/{projectId}/generate-images`.
 - Pipeline now selects the first generated image (`images[0]`) by default.
