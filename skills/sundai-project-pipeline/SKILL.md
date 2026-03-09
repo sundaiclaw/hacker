@@ -89,7 +89,10 @@ During execution, emit concise live status updates after each major phase using 
 6. **Required defaults for every project**
    - Ensure team member **vyahhi** (Nikolay Vyahhi) is present.
    - If API member assignment does not persist, immediately use UI `+ Add Team Members` fallback and re-save.
-   - Skip AI thumbnail generation for now (feature is unreliable on Sundai site).
+   - Generate project thumbnail via API: `POST /api/projects/{projectId}/generate-images` with JSON `{ "prompt": "..." }`.
+   - If multiple images are returned, always pick the **1st image**.
+   - Save project with selected thumbnail and verify thumbnail persisted after reload.
+   - If image-generation API fails, fallback to existing thumbnail state and continue.
 
 7. **Post-save verification (mandatory)**
    - Verify persisted fields via API readback first; use UI reload check as fallback.

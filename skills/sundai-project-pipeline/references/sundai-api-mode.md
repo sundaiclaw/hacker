@@ -15,6 +15,7 @@ Use API calls first for speed/reliability. Use UI only as fallback.
 - Read project: `GET /api/projects/{projectId}`
 - Edit/save: `PATCH /api/projects/{projectId}/edit` (FormData)
 - Submit/publish or delist: `PATCH /api/projects/{projectId}/submit` (JSON body)
+- Generate images: `POST /api/projects/{projectId}/generate-images` (JSON body)
 
 ## Submit payload (verified)
 `PATCH /api/projects/{projectId}/submit` expects JSON body:
@@ -22,6 +23,16 @@ Use API calls first for speed/reliability. Use UI only as fallback.
 - delist: `{ "status": "DRAFT" }`
 
 If submit returns non-200, verify publish state and fallback to UI Submit/Delist.
+
+## Image generation payload (verified)
+`POST /api/projects/{projectId}/generate-images` expects JSON body:
+- `{ "prompt": "<generation prompt>" }`
+
+Response shape:
+- `{ "images": ["url1", "url2", ...] }`
+
+Pipeline rule:
+- Always pick `images[0]` (first image), then save project and verify thumbnail persisted.
 
 ## Pipeline behavior
 1. Create project via API (title/brief/lead/team including `vyahhi`).

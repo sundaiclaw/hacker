@@ -1,5 +1,10 @@
 # sundai-project-pipeline changelog
 
+## v1.10.0 - 2026-03-08
+- Added API thumbnail generation step via `POST /api/projects/{projectId}/generate-images`.
+- Pipeline now selects the first generated image (`images[0]`) by default.
+- Added mandatory thumbnail persistence verification after save/reload.
+
 ## v1.9.0 - 2026-03-08
 - Reordered pipeline to deploy immediately after build+GitHub push.
 - Demo URL is now captured early and used in Sundai edit/link sync steps.

@@ -21,7 +21,9 @@
 - [ ] One-liner filled
 - [ ] Full description uses real paragraphs (no literal `\\n`)
 - [ ] Team member `vyahhi` added
-- [ ] AI thumbnail generation skipped
+- [ ] Thumbnail generated via `/api/projects/{projectId}/generate-images`
+- [ ] First generated image selected
+- [ ] Thumbnail persisted after save/reload
 - [ ] Saved after edits
 - [ ] Reloaded edit page and re-verified GitHub URL is still filled
 - [ ] Reloaded edit page and re-verified Full Description is still filled
