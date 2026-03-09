@@ -1,3 +1,5 @@
+![hacker](card.png) 
+
 # hacker
 
 Public repo that mirrors the latest `sundai-project-pipeline` skill.
