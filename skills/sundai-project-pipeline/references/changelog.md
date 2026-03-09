@@ -1,5 +1,14 @@
 # sundai-project-pipeline changelog
 
+## v1.6.0 - 2026-03-08
+- Fixed team-member reliability: if API assignment does not persist, pipeline now must use UI add-member fallback and re-verify `vyahhi` before publish.
+
+## v1.5.0 - 2026-03-08
+- Switched Sundai execution to cookie-backed API-first mode (create/edit/submit/verify), with UI fallback only.
+- Captured and documented real create/edit request payload schemas from live traffic.
+- Added known submit behavior handling (500 can occur for already-submitted projects; verify publish state before fallback).
+- Added mandatory live numbered progress checkpoints during pipeline runs.
+
 ## v1.4.0 - 2026-03-08
 - Enforced strict no-skip/no-reorder execution rule for checklist steps.
 - Enforced immediate link sharing as soon as URLs are available (GitHub, deploy, Sundai).

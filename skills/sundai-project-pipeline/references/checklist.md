@@ -23,6 +23,7 @@
 - [ ] Reloaded edit page and re-verified GitHub URL is still filled
 - [ ] Reloaded edit page and re-verified Full Description is still filled
 - [ ] Reloaded edit page and re-verified team member `vyahhi` is still present
+- [ ] If missing, used UI add-member fallback and re-verified presence before publish
 - [ ] Submitted/published (`Delist` shown)
 - [ ] Liked own project and verified like count/state
 - [ ] Deployment completed and URL captured

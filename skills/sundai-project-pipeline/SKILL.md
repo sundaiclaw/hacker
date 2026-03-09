@@ -78,7 +78,8 @@ During execution, emit concise live status updates after each major phase using 
    - If API update fails, use UI edit flow as fallback.
 
 5. **Required defaults for every project**
-   - Ensure team member **vyahhi** (Nikolay Vyahhi) is present (set during create/update API call).
+   - Ensure team member **vyahhi** (Nikolay Vyahhi) is present.
+   - If API member assignment does not persist, immediately use UI `+ Add Team Members` fallback and re-save.
    - Skip AI thumbnail generation for now (feature is unreliable on Sundai site).
 
 6. **Post-save verification (mandatory)**

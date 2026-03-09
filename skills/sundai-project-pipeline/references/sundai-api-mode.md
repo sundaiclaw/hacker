@@ -79,6 +79,6 @@ Observed example:
 ## Verification minimums
 - `githubUrl` persisted
 - `description/fullDescription` persisted with real newlines
-- `teamMembers` includes `vyahhi`
+- `teamMembers` includes `vyahhi` (if API misses it, enforce UI add-member fallback)
 - `demoUrl` persisted after deployment
 - submit response OK / project in Delist state
