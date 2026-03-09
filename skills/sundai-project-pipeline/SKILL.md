@@ -42,7 +42,8 @@ During execution, emit concise live status updates after each major phase using 
    - Pick 1 that is:
      - clearly differentiated from your and others recent Sundai projects
      - demoable in minutes
-     - **creative/radical** in agentic AI angle (not generic "chatbot" or wrapper)
+     - **creative/radical** AI product idea (not generic "chatbot" or wrapper)
+     - can include broader categories: AI coding agents, AI devtools, AI workflow copilots, AI evaluation/safety tools, consumer AI utilities
      - tied to a real current pain point from the external scan
    - If user already gave a fixed idea, keep it; otherwise pick the best idea from this step.
    - Keep project title <= 32 chars and brief description <= 100 chars.

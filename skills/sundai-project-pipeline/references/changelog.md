@@ -1,5 +1,10 @@
 # sundai-project-pipeline changelog
 
+## v1.12.0 - 2026-03-08
+- Broadened ideation scope from agentic-only to broader AI products.
+- Explicitly allow categories like AI coding agents, AI devtools, workflow copilots, safety/eval tools, and consumer AI utilities.
+- Kept creativity/radicality requirement while removing narrow agentic-only framing.
+
 ## v1.11.0 - 2026-03-08
 - Refined thumbnail flow: after generate-images API call, wait/poll briefly for images before selection.
 - Explicitly select first image (`images[0]`) after image list becomes available.
