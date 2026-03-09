@@ -1,5 +1,8 @@
 # sundai-project-pipeline changelog
 
+## v1.13.0 - 2026-03-08
+- Increased thumbnail generation polling window to 120s total with 5s interval before fallback.
+
 ## v1.12.0 - 2026-03-08
 - Broadened ideation scope from agentic-only to broader AI products.
 - Explicitly allow categories like AI coding agents, AI devtools, workflow copilots, safety/eval tools, and consumer AI utilities.

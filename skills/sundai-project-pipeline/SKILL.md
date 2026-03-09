@@ -91,7 +91,7 @@ During execution, emit concise live status updates after each major phase using 
    - Ensure team member **vyahhi** (Nikolay Vyahhi) is present.
    - If API member assignment does not persist, immediately use UI `+ Add Team Members` fallback and re-save.
    - Generate project thumbnail via API: `POST /api/projects/{projectId}/generate-images` with JSON `{ "prompt": "..." }`.
-   - After generation call, **wait/poll briefly** for image list availability (short retries) before selecting.
+   - After generation call, poll for image availability for up to **120 seconds** (every **5 seconds**) before selecting.
    - If multiple images are returned, always pick the **1st image** (`images[0]`).
    - Save project with selected thumbnail and verify thumbnail persisted after reload.
    - If image-generation API fails, fallback to existing thumbnail state and continue.
