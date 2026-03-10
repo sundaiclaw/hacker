@@ -61,7 +61,8 @@ During execution, emit concise live status updates after each major phase using 
    - Capture repo URL for Sundai `GitHub URL` field.
 
 3. **Deploy early (mandatory, after build/push)**
-   - Deploy immediately after GitHub push (Render by default; static projects may use GitHub Pages).
+   - Deploy immediately after GitHub push using **GCP Cloud Run by default**.
+   - Static-only projects may use GitHub Pages when Cloud Run is unnecessary.
    - If no deploy target/service exists for the repo, create one first.
    - Capture live `Demo URL` and deployment id/reference as early as possible.
    - Do **not** block here on full health checks; health validation runs later.
@@ -168,7 +169,7 @@ During execution, emit concise live status updates after each major phase using 
    - Reply with:
      - GitHub repo URL
      - Sundai project URL
-     - Render service URL
+     - Deploy URL (Cloud Run or Pages)
      - Publish status confirmation
 
 ## Fast command interpretation
@@ -185,7 +186,8 @@ Interpret as: run the full workflow above, including team member, post-save veri
   - `CC_API_KEY`
   - `CC_BASE_URL=https://computecommunity.com/sundai-server/v1`
   - `CC_MODEL=MiniMaxAI/MiniMax-M2.5`
-  - `RENDER_API_KEY` (for isolated/non-interactive deploy steps)
+  - `GCP_PROJECT_ID`
+  - `GCP_REGION` (recommended default: `us-central1`)
 - Always load env first in runs (e.g., `set -a; source .env.sundai; set +a`).
 - Load these vars before running local tests/deploy scripts.
 - Never commit API keys into repo code/README.

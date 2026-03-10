@@ -1,5 +1,10 @@
 # sundai-project-pipeline changelog
 
+## v1.14.0 - 2026-03-10
+- Switched default deployment target to GCP Cloud Run (Pages allowed only for static edge cases).
+- Updated required local env keys to include `GCP_PROJECT_ID` and `GCP_REGION`.
+- Final artifact output now uses generic Deploy URL wording instead of Render-only wording.
+
 ## v1.13.0 - 2026-03-08
 - Increased thumbnail generation polling window to 120s total with 5s interval before fallback.
 
