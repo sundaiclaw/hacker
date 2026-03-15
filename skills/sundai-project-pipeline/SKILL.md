@@ -56,6 +56,8 @@ During execution, emit concise live status updates after each major phase using 
      - `OPENROUTER_MODEL=<free model from openrouter/free>`
      - `OPENROUTER_API_KEY=<secret>`
    - Implement at least one real LLM call in the app flow (not mock/rules-only).
+   - AI must be **user-facing and core to value** (not hidden test endpoint only).
+   - Reject ideas that can be delivered equivalently without AI.
    - Create a **new public GitHub repo for this run** (no reusing old project repos).
    - Push code and verify repo URL resolves publicly.
    - Capture repo URL for Sundai `GitHub URL` field.
@@ -131,6 +133,8 @@ During execution, emit concise live status updates after each major phase using 
      - homepage loads in browser without obvious runtime error
      - at least one key interaction path works
      - at least one **AI-backed** interaction path works end-to-end
+   - For AI verification, capture concrete evidence (response snippet or server/API success signal).
+   - If AI call fails due model/provider issue, switch to another OpenRouter free model and retry before finalizing.
    - If deployment is still warming, wait/retry and report `waiting for live health` status.
    - If smoke test fails after retries, fix and redeploy before finalizing.
 
@@ -171,6 +175,7 @@ During execution, emit concise live status updates after each major phase using 
      - Sundai project URL
      - Deploy URL (Cloud Run or Pages)
      - Publish status confirmation
+     - AI verification note (which model + proof that user-facing AI path worked)
 
 ## Fast command interpretation
 When user says short commands like:

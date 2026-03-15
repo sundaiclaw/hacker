@@ -1,5 +1,11 @@
 # sundai-project-pipeline changelog
 
+## v1.16.0 - 2026-03-15
+- Strengthened AI requirement: AI must be user-facing and central to project value.
+- Added mandatory AI evidence in smoke test (response snippet/log/model used).
+- Added fallback rule: if AI provider/model fails, switch to another OpenRouter free model and retry.
+- Final artifacts now must include AI verification note.
+
 ## v1.15.0 - 2026-03-15
 - Switched mandatory AI provider from Compute Community to OpenRouter free models.
 - Updated required env keys to `OPENROUTER_API_KEY`, `OPENROUTER_BASE_URL`, `OPENROUTER_MODEL`.
