@@ -10,6 +10,7 @@
 - [ ] Brief description fits Sundai limit (<=100 chars)
 - [ ] MVP includes real AI call (not mock/rules-only)
 - [ ] AI is user-facing and central to product value (not hidden helper endpoint)
+- [ ] AI output is rendered for humans (markdown/rendered rich text where applicable), not plain raw dump
 - [ ] AI integration uses OpenRouter free model via env vars (`OPENROUTER_API_KEY`, `OPENROUTER_BASE_URL`, `OPENROUTER_MODEL`)
 - [ ] GitHub repo exists and is pushed (new repo for this run)
 - [ ] Early deployment executed immediately after push; Demo URL captured

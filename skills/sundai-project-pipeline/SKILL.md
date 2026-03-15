@@ -63,6 +63,7 @@ During execution, emit concise live status updates after each major phase using 
      - `OPENROUTER_API_KEY=<secret>`
    - Implement at least one real LLM call in the app flow (not mock/rules-only).
    - AI must be **user-facing and core to value** (not hidden test endpoint only).
+   - Render AI responses in a human-friendly UI format (markdown/rendered text), not raw/plain unformatted dumps.
    - Reject ideas that can be delivered equivalently without AI.
    - Create a **new public GitHub repo for this run** (no reusing old project repos).
    - Push code and verify repo URL resolves publicly.

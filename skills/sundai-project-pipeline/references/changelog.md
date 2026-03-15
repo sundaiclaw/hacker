@@ -1,5 +1,9 @@
 # sundai-project-pipeline changelog
 
+## v1.18.0 - 2026-03-15
+- Added AI UX requirement: render model output in human-friendly markdown/rich format (not plain text dump).
+- Updated checklist to verify AI output presentation quality.
+
 ## v1.17.0 - 2026-03-15
 - Hardened Sundai Website API-first enforcement across create/edit/submit/verify steps.
 - Added explicit rule: UI is fallback-only and must include reason logging.
