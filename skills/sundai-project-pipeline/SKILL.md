@@ -50,11 +50,11 @@ During execution, emit concise live status updates after each major phase using 
 
 2. **Build MVP with mandatory AI integration + create NEW GitHub repo + push**
    - Create a minimal but runnable MVP.
-   - **Mandatory:** each project must use AI in-product via Compute Community endpoint.
+   - **Mandatory:** each project must use AI in-product via OpenRouter **free** models.
    - Use this provider config (from environment variables, never hardcode secrets):
-     - `CC_BASE_URL=https://computecommunity.com/sundai-server/v1`
-     - `CC_MODEL=MiniMaxAI/MiniMax-M2.5`
-     - `CC_API_KEY=<secret>`
+     - `OPENROUTER_BASE_URL=https://openrouter.ai/api/v1`
+     - `OPENROUTER_MODEL=<free model from openrouter/free>`
+     - `OPENROUTER_API_KEY=<secret>`
    - Implement at least one real LLM call in the app flow (not mock/rules-only).
    - Create a **new public GitHub repo for this run** (no reusing old project repos).
    - Push code and verify repo URL resolves publicly.
@@ -183,9 +183,9 @@ Interpret as: run the full workflow above, including team member, post-save veri
 ## Local Environment (required)
 - Ensure local env file exists at workspace root: `.env.sundai`.
 - Required keys:
-  - `CC_API_KEY`
-  - `CC_BASE_URL=https://computecommunity.com/sundai-server/v1`
-  - `CC_MODEL=MiniMaxAI/MiniMax-M2.5`
+  - `OPENROUTER_API_KEY`
+  - `OPENROUTER_BASE_URL=https://openrouter.ai/api/v1`
+  - `OPENROUTER_MODEL` (must be a free model from `https://openrouter.ai/openrouter/free`)
   - `GCP_PROJECT_ID`
   - `GCP_REGION` (recommended default: `us-central1`)
 - Always load env first in runs (e.g., `set -a; source .env.sundai; set +a`).
@@ -194,5 +194,5 @@ Interpret as: run the full workflow above, including team member, post-save veri
 
 ## Reference
 - Use `references/checklist.md` as a run checklist and copy-safe description template.
-- Use `references/ai-endpoint.md` for integration snippet/pattern.
+- Use `references/ai-endpoint.md` for OpenRouter integration snippet/pattern.
 - Use `references/sundai-api-mode.md` for API-first request patterns and fallback rules.

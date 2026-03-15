@@ -1,5 +1,10 @@
 # sundai-project-pipeline changelog
 
+## v1.15.0 - 2026-03-15
+- Switched mandatory AI provider from Compute Community to OpenRouter free models.
+- Updated required env keys to `OPENROUTER_API_KEY`, `OPENROUTER_BASE_URL`, `OPENROUTER_MODEL`.
+- Updated AI endpoint reference and checklist to OpenRouter-based integration.
+
 ## v1.14.0 - 2026-03-10
 - Switched default deployment target to GCP Cloud Run (Pages allowed only for static edge cases).
 - Updated required local env keys to include `GCP_PROJECT_ID` and `GCP_REGION`.

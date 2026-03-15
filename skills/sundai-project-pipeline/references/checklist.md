@@ -9,7 +9,7 @@
 - [ ] Title fits Sundai limit (<=32 chars)
 - [ ] Brief description fits Sundai limit (<=100 chars)
 - [ ] MVP includes real AI call (not mock/rules-only)
-- [ ] AI integration uses Compute Community endpoint via env vars (`CC_API_KEY`, `CC_BASE_URL`, `CC_MODEL`)
+- [ ] AI integration uses OpenRouter free model via env vars (`OPENROUTER_API_KEY`, `OPENROUTER_BASE_URL`, `OPENROUTER_MODEL`)
 - [ ] GitHub repo exists and is pushed (new repo for this run)
 - [ ] Early deployment executed immediately after push; Demo URL captured
 - [ ] Project create executed via cookie-backed API (or UI fallback documented)
