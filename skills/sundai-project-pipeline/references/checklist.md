@@ -13,10 +13,10 @@
 - [ ] AI integration uses OpenRouter free model via env vars (`OPENROUTER_API_KEY`, `OPENROUTER_BASE_URL`, `OPENROUTER_MODEL`)
 - [ ] GitHub repo exists and is pushed (new repo for this run)
 - [ ] Early deployment executed immediately after push; Demo URL captured
-- [ ] Project create executed via cookie-backed API (or UI fallback documented)
-- [ ] Project fields updated via cookie-backed API patch (or UI fallback documented)
+- [ ] Project create executed via cookie-backed API (UI fallback only if API blocked, with reason logged)
+- [ ] Project fields updated via cookie-backed API patch (UI fallback only if API blocked, with reason logged)
 - [ ] Edit PATCH preserved existing `participants` (no accidental team wipe)
-- [ ] Submit API call sent JSON body `{ "status": "APPROVED" }`
+- [ ] Submit API call sent JSON body `{ "status": "APPROVED" }` (UI fallback only if API blocked, with reason logged)
 - [ ] GitHub URL persisted (API readback or UI reload verify)
 - [ ] Demo URL persisted (API readback or UI reload verify)
 - [ ] One-liner filled

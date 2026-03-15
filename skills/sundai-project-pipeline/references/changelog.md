@@ -1,5 +1,10 @@
 # sundai-project-pipeline changelog
 
+## v1.17.0 - 2026-03-15
+- Hardened Sundai Website API-first enforcement across create/edit/submit/verify steps.
+- Added explicit rule: UI is fallback-only and must include reason logging.
+- Added API-readback verification requirement after writes whenever possible.
+
 ## v1.16.0 - 2026-03-15
 - Strengthened AI requirement: AI must be user-facing and central to project value.
 - Added mandatory AI evidence in smoke test (response snippet/log/model used).

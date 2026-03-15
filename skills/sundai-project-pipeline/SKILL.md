@@ -8,6 +8,12 @@ description: End-to-end Sundai Club project shipping workflow from idea to code 
 ## Overview
 Execute a complete Sundai shipping run with no skipped steps. Default to this pipeline for any Sundai project request unless the user explicitly asks for a partial action.
 
+## API-first enforcement (mandatory)
+- Use Sundai Website API as the default execution path for create/edit/submit/verify.
+- UI actions are fallback-only when API call fails or times out.
+- Every UI fallback must be explicitly reported with step number + reason.
+- After any write (API or UI), perform API readback verification whenever possible.
+
 ## Progress Reporting (mandatory)
 During execution, emit concise live status updates after each major phase using numbered checkpoints:
 - `1/12 ...` through `12/12 ...`
@@ -69,16 +75,16 @@ During execution, emit concise live status updates after each major phase using 
    - Capture live `Demo URL` and deployment id/reference as early as possible.
    - Do **not** block here on full health checks; health validation runs later.
 
-4. **Create Sundai project (cookie-backed API first)**
+4. **Create Sundai project (cookie-backed API mandatory-first)**
    - Reuse authenticated Sundai browser session (cookies) for API calls.
-   - Prefer API create; do not start with UI clicks when API path works.
+   - Start with API create by default; do not start with UI clicks unless API path is blocked.
    - Include: `Project Title`, `Brief Description`, `Launch Lead`, and team member **vyahhi** (Nikolay Vyahhi).
    - For API create, send `members` as structured objects (`id`, `role`) — not usernames/handles.
    - Capture `projectId` and canonical project URL.
    - If API create fails after session refresh/retry, use UI create flow as fallback.
 
-5. **Edit details (cookie-backed API first)**
-   - Prefer API update for project fields using the authenticated browser session cookies.
+5. **Edit details (cookie-backed API mandatory-first)**
+   - Use API update for project fields by default using authenticated browser session cookies.
    - Read current project first and preserve `participants` in PATCH payload unless intentionally changing team.
    - Do not send empty `participants` by default.
    - Fill at minimum:
@@ -107,8 +113,8 @@ During execution, emit concise live status updates after each major phase using 
      - Team member `vyahhi`
    - If any field is missing, patch again and re-verify before publish.
 
-8. **Publish/submit (cookie-backed API first)**
-   - Prefer `PATCH /api/projects/{projectId}/submit` with JSON body `{ "status": "APPROVED" }`.
+8. **Publish/submit (cookie-backed API mandatory-first)**
+   - Use `PATCH /api/projects/{projectId}/submit` with JSON body `{ "status": "APPROVED" }` by default.
    - Treat 200 as success.
    - If API is non-200, verify publish state.
    - Verification order:
