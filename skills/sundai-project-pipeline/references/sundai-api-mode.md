@@ -31,8 +31,14 @@ If submit returns non-200, verify publish state and fallback to UI Submit/Delist
 Response shape:
 - `{ "images": ["url1", "url2", ...] }`
 
-Pipeline rule:
-- Always pick `images[0]` (first image), then save project and verify thumbnail persisted.
+Pipeline rule (API-only):
+1. Generate images via API.
+2. Pick `images[0]`.
+3. Fetch `images[0]` URL as blob/file.
+4. Send as FormData key `thumbnail` in `PATCH /api/projects/{projectId}/edit`.
+5. Verify `thumbnailId` persisted via readback.
+
+UI image picker is fallback-only.
 
 ## Pipeline behavior
 1. Create project via API (title/brief/lead/team including `vyahhi`).

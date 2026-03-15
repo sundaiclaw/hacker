@@ -1,5 +1,13 @@
 # sundai-project-pipeline changelog
 
+## v1.19.0 - 2026-03-15
+- Verified and enforced API-only thumbnail selection path:
+  - generate images via API,
+  - choose `images[0]`,
+  - upload via `thumbnail` FormData key in API edit,
+  - verify `thumbnailId` changed via API readback.
+- UI thumbnail picker remains fallback-only with explicit reason logging.
+
 ## v1.18.0 - 2026-03-15
 - Added AI UX requirement: render model output in human-friendly markdown/rich format (not plain text dump).
 - Updated checklist to verify AI output presentation quality.
