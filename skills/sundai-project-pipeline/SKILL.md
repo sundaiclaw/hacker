@@ -10,12 +10,18 @@ Execute a complete Sundai shipping run with no skipped steps. Default to this pi
 
 ## API-first enforcement (mandatory)
 - Use Sundai Website API as the default execution path for create/edit/submit/verify.
-- Auth: use `deploy/refresh-sundai-auth.sh` to get fresh cookies on demand (see `references/sundai-api-mode.md` for details).
-  - Source the script: `source deploy/refresh-sundai-auth.sh && COOKIE=$(sundai_cookie_header)`
-  - Uses `SUNDAI_CLERK_CLIENT` + `SUNDAI_SESSION_ID` from `.env.sundai` for fast token refresh.
-  - Auto-falls back to full GitHub OAuth re-auth if session expired.
-- If API calls return `401`/`Unauthorized`, run `deploy/refresh-sundai-auth.sh` to refresh auth, retry, then fall back to UI.
-- UI actions are fallback-only when API call fails or times out.
+- **Auth via inline curl** (do NOT use browser for auth):
+  1. Load env: `source .env.sundai` (contains `SUNDAI_CLERK_CLIENT` and `SUNDAI_SESSION_ID`)
+  2. Mint a fresh 60s session JWT before each API call:
+     ```bash
+     JWT=$(curl -s -X POST "https://clerk.sundai.club/v1/client/sessions/$SUNDAI_SESSION_ID/tokens" \
+       -H "Cookie: __client=$SUNDAI_CLERK_CLIENT" -H "Origin: https://www.sundai.club" \
+       | python3 -c "import sys,json; print(json.load(sys.stdin).get('jwt',''))")
+     ```
+  3. Use it: `curl -H "Cookie: __session=$JWT; __client_uat=$(date +%s)" https://www.sundai.club/api/...`
+- **Important:** The sundaiclaw bot account hacker ID is `bb909f3a-89b6-402c-8062-76172c6aec28`. Always use this as `launchLeadId` when creating projects so the bot can edit/publish them.
+- If API calls return `401`/`Unauthorized`, mint a new JWT and retry. Do NOT fall back to browser for auth.
+- UI/browser actions are fallback-only when API call fails after retry.
 - Every UI fallback must be explicitly reported with step number + reason.
 - After any write (API or UI), perform API readback verification whenever possible.
 
