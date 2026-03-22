@@ -4,12 +4,32 @@ Use API calls first for speed/reliability. Use UI only as fallback.
 
 ## Principles
 - Prefer API for create/update/submit/verify.
-- Reuse authenticated browser session cookies for API calls (cookie-backed API mode).
-- If `SUNDAI_COOKIE_HEADER` is present in `.env.sundai`, prefer it as the first auth source for API requests.
-- Keep browser UI for auth bootstrap and fallback only.
 - After every write, do readback verification before proceeding.
 - Log which step used fallback when API fails.
-- Treat `401` / `Unauthorized` as expired Sundai auth: report it clearly, refresh/reacquire the cookie header, then retry before UI fallback.
+- On `401`/`Unauthorized`: run `deploy/refresh-sundai-auth.sh` to get a fresh cookie, retry, then UI fallback.
+
+## Authentication (Clerk + GitHub OAuth)
+Sundai uses Clerk with **OAuth-only** sign-in (GitHub/Google/Discord). No password auth exists.
+
+**How it works:**
+1. `SUNDAI_CLERK_CLIENT` (long-lived ~10yr `__client` JWT) + `SUNDAI_SESSION_ID` are stored in `.env.sundai`.
+2. Before each API call, mint a fresh `__session` JWT (60s lifetime) via:
+   `POST https://clerk.sundai.club/v1/client/sessions/{SUNDAI_SESSION_ID}/tokens`
+   with `Cookie: __client={SUNDAI_CLERK_CLIENT}`.
+3. Use the returned JWT as `Cookie: __session={jwt}; __client_uat={unix_ts}` in API requests.
+4. If the session is expired/revoked, `deploy/refresh-sundai-auth.sh` does a full GitHub OAuth re-auth automatically.
+
+**Quick usage:**
+```bash
+source deploy/refresh-sundai-auth.sh
+COOKIE=$(sundai_cookie_header)
+curl -H "Cookie: $COOKIE" https://www.sundai.club/api/projects?status=APPROVED
+```
+
+**CLI modes:**
+- `deploy/refresh-sundai-auth.sh` — prints fresh cookie header to stdout
+- `deploy/refresh-sundai-auth.sh --update` — updates `.env.sundai` with fresh auth
+- `deploy/refresh-sundai-auth.sh --test` — verifies API access works
 
 ## Core endpoints (verified against sundai-website-v2)
 - List approved: `GET /api/projects?status=APPROVED`

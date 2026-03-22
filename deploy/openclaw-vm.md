@@ -61,7 +61,8 @@ This repo mirrors the VM-hosted OpenClaw deployment used for Sundai shipping. Th
 - `GCP_REGION`
 - `SUNDAI_USERNAME`
 - `SUNDAI_PASSWORD`
-- `SUNDAI_COOKIE_HEADER`
+- `SUNDAI_CLERK_CLIENT` (long-lived Clerk `__client` JWT, ~10yr)
+- `SUNDAI_SESSION_ID` (active Clerk session ID, `sess_*`)
 
 ## Active identities
 
@@ -76,7 +77,7 @@ This repo mirrors the VM-hosted OpenClaw deployment used for Sundai shipping. Th
 ## Notes
 
 - Keep `/home/vyahhi/.openclaw/.env` out of git.
-- For reliable Sundai API-first runs, keep `SUNDAI_COOKIE_HEADER` current in `/home/vyahhi/.openclaw/.env`.
+- For reliable Sundai API-first runs, keep `SUNDAI_CLERK_CLIENT` and `SUNDAI_SESSION_ID` current in `/home/vyahhi/.openclaw/.env`. The pipeline uses `deploy/refresh-sundai-auth.sh` to mint fresh 60s session JWTs on demand, with automatic GitHub OAuth re-auth fallback.
 - Keep the VM `gcloud` default project set to the project ID `project-3930b9ab-6eae-4b3a-959`, not the numeric project number.
 - Even with the default fixed, deployment commands should still pass explicit `--project "$GCP_PROJECT_ID"` and `--region "$GCP_REGION"`.
 - The live VM currently uses Telegram `streaming: "block"`.

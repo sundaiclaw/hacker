@@ -10,8 +10,11 @@ Execute a complete Sundai shipping run with no skipped steps. Default to this pi
 
 ## API-first enforcement (mandatory)
 - Use Sundai Website API as the default execution path for create/edit/submit/verify.
-- Prefer `SUNDAI_COOKIE_HEADER` from `.env.sundai` as the first auth source for cookie-backed API calls when it is available.
-- If API calls return `401`/`Unauthorized`, treat that as expired Sundai auth, report it explicitly in the current step update, and refresh/reacquire the cookie header before falling back to UI.
+- Auth: use `deploy/refresh-sundai-auth.sh` to get fresh cookies on demand (see `references/sundai-api-mode.md` for details).
+  - Source the script: `source deploy/refresh-sundai-auth.sh && COOKIE=$(sundai_cookie_header)`
+  - Uses `SUNDAI_CLERK_CLIENT` + `SUNDAI_SESSION_ID` from `.env.sundai` for fast token refresh.
+  - Auto-falls back to full GitHub OAuth re-auth if session expired.
+- If API calls return `401`/`Unauthorized`, run `deploy/refresh-sundai-auth.sh` to refresh auth, retry, then fall back to UI.
 - UI actions are fallback-only when API call fails or times out.
 - Every UI fallback must be explicitly reported with step number + reason.
 - After any write (API or UI), perform API readback verification whenever possible.

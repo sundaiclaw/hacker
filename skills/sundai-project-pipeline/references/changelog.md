@@ -1,5 +1,12 @@
 # sundai-project-pipeline changelog
 
+## v1.21.0 - 2026-03-22
+- Replaced static `SUNDAI_COOKIE_HEADER` (60s expiry) with durable Clerk auth via `deploy/refresh-sundai-auth.sh`.
+- New env vars: `SUNDAI_CLERK_CLIENT` (long-lived ~10yr client JWT) + `SUNDAI_SESSION_ID` (active session).
+- Script mints fresh `__session` JWTs on demand; auto-falls back to full GitHub OAuth re-auth if session expires.
+- Pipeline now sources `deploy/refresh-sundai-auth.sh` for cookie generation instead of reading a static header.
+- Verified working on both local and GCP VM.
+
 ## v1.20.3 - 2026-03-22
 - Hardened Cloud Run deployment guidance to always pass explicit `gcloud` flags from env: `--project "$GCP_PROJECT_ID"` and `--region "$GCP_REGION"`.
 - Added guardrail to avoid relying on host-level default `gcloud` project/region config during Telegram/VM runs.
