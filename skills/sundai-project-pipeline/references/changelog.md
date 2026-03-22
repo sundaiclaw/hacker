@@ -1,5 +1,9 @@
 # sundai-project-pipeline changelog
 
+## v1.20.0 - 2026-03-22
+- Tightened progress-reporting rules so every live update must include both the current step and the immediate next step.
+- Added preferred compact Telegram/chat progress message formats, including blocked-state messaging with explicit next action.
+
 ## v1.19.1 - 2026-03-22
 - Fixed progress checkpoint guidance to match the current 15-step workflow (`1/15` through `15/15`).
 - Corrected mirror README to point at the local checklist reference file.

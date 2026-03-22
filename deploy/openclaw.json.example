@@ -36,12 +36,17 @@
   "agents": {
     "defaults": {
       "model": {
-        "primary": "minimax/MiniMax-M2.7"
+        "primary": "minimax/MiniMax-M2.7",
+        "fallbacks": [
+          "openrouter/free"
+        ]
       },
       "models": {
+        "openrouter/auto": {},
         "minimax/MiniMax-M2.7": {
           "alias": "Minimax"
-        }
+        },
+        "openrouter/free": {}
       }
     }
   },

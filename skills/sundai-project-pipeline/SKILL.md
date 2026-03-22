@@ -17,13 +17,23 @@ Execute a complete Sundai shipping run with no skipped steps. Default to this pi
 ## Progress Reporting (mandatory)
 During execution, emit concise live status updates after each major phase using numbered checkpoints:
 - `1/15 ...` through `15/15 ...`
+- Every progress update must state both:
+  - the **current step** being executed now
+  - the **next step** that will run immediately after
+- Preferred format:
+  - `N/15 <current task>. Next: <next task>.`
 - Include concrete outputs as soon as available (repo URL, Render URL, Sundai URL)
 - If blocked, report exact blocker and current step number
+- If blocked, also state the intended next action after the blocker is cleared
 - Do not stay silent for long-running phases; send periodic progress updates
 
 ## Runtime communication (mandatory)
 - Be verbal while running the pipeline.
 - Print checklist progress as steps complete (e.g., `✅ 3/15 Repo created`, `🔄 7/15 Publishing`, `⚠️ 10/15 Smoke test failed, retrying`).
+- For Telegram/chat runs, prefer compact operator-style updates such as:
+  - `1/15 Researching approved projects. Next: score 3 ideas.`
+  - `3/15 Deploying to Cloud Run. Next: capture demo URL.`
+  - `Blocked at 3/15: Cloud Run denied for project X. Next: retry in project Y.`
 - **Do not skip or renumber steps**; execute strictly in order and report every step.
 - Send concise milestone updates during long runs, not just a final summary.
 - End with a compact checklist recap showing status for each major step.

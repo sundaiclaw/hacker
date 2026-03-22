@@ -33,6 +33,7 @@ VM deployment artifacts for the current OpenClaw setup live in `deploy/`:
 
 - `Dockerfile`
 - `deploy/bootstrap-openclaw-vm.sh`
+- `deploy/sync-hacker-skill.sh`
 - `deploy/openclaw.service`
 - `deploy/openclaw.json.example`
 - `deploy/openclaw-vm.md`

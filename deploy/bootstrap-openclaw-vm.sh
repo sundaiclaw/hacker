@@ -34,8 +34,37 @@ npm install -g openclaw
 
 id -u "${USERNAME}" >/dev/null 2>&1 || useradd --create-home --shell /bin/bash "${USERNAME}"
 install -d -o "${USERNAME}" -g "${USERNAME}" "${OPENCLAW_HOME}"
+install -d -o "${USERNAME}" -g "${USERNAME}" "${OPENCLAW_HOME}/bin"
 install -d -o "${USERNAME}" -g "${USERNAME}" "${OPENCLAW_HOME}/workspace"
 install -d -o "${USERNAME}" -g "${USERNAME}" "${OPENCLAW_HOME}/skills"
+
+cat >"${OPENCLAW_HOME}/bin/sync-hacker-skill.sh" <<EOF
+#!/usr/bin/env bash
+set -euo pipefail
+
+REPO=${OPENCLAW_HOME}/workspace
+SKILL_LINK=${OPENCLAW_HOME}/skills/sundai-project-pipeline
+TARGET=\$REPO/skills/sundai-project-pipeline
+ENV_LINK=\$REPO/.env.sundai
+ENV_TARGET=${OPENCLAW_HOME}/.env
+CHECKLIST_LINK=\$REPO/references/checklist.md
+CHECKLIST_TARGET=\$TARGET/references/checklist.md
+
+if [ ! -d "\$REPO/.git" ]; then
+  echo "workspace repo missing: \$REPO" >&2
+  exit 1
+fi
+
+git -C "\$REPO" fetch origin main
+git -C "\$REPO" reset --hard origin/main
+ln -sfn "\$TARGET" "\$SKILL_LINK"
+ln -sfn "\$ENV_TARGET" "\$ENV_LINK"
+mkdir -p "\$REPO/references"
+ln -sfn "\$CHECKLIST_TARGET" "\$CHECKLIST_LINK"
+EOF
+
+chmod 755 "${OPENCLAW_HOME}/bin/sync-hacker-skill.sh"
+chown "${USERNAME}:${USERNAME}" "${OPENCLAW_HOME}/bin/sync-hacker-skill.sh"
 
 cat >/etc/systemd/system/openclaw.service <<UNIT
 [Unit]
@@ -50,6 +79,7 @@ WorkingDirectory=${HOME_DIR}
 Environment=HOME=${HOME_DIR}
 Environment=PATH=/usr/bin:/usr/local/bin:/bin
 EnvironmentFile=${OPENCLAW_HOME}/.env
+ExecStartPre=${OPENCLAW_HOME}/bin/sync-hacker-skill.sh
 ExecStart=/usr/bin/openclaw gateway run --allow-unconfigured --bind loopback --port 18789 --auth token --token \${OPENCLAW_GATEWAY_TOKEN}
 Restart=always
 RestartSec=5
@@ -67,5 +97,6 @@ Next:
 1. Create ${OPENCLAW_HOME}/.env from .env.example.
 2. Create ${OPENCLAW_HOME}/openclaw.json from deploy/openclaw.json.example.
 3. Clone the repo into ${OPENCLAW_HOME}/workspace.
-4. systemctl start openclaw
+4. Verify ${OPENCLAW_HOME}/bin/sync-hacker-skill.sh can `git fetch origin main`.
+5. systemctl start openclaw
 EOF
