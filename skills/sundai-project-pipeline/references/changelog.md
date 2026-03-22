@@ -1,5 +1,10 @@
 # sundai-project-pipeline changelog
 
+## v1.20.2 - 2026-03-22
+- Added `SUNDAI_COOKIE_HEADER` as the preferred auth source for Sundai cookie-backed API mode.
+- Added explicit `401` / `Unauthorized` handling: report expired auth, refresh/reacquire cookie header, then retry before UI fallback.
+- Documented `SUNDAI_COOKIE_HEADER` in the public env example and VM deployment notes.
+
 ## v1.20.1 - 2026-03-22
 - Made the external web/news scan in step 1 non-blocking.
 - Added a required API-only Sundai approved-project fallback when web search is unavailable, rate-limited, or credit-blocked.

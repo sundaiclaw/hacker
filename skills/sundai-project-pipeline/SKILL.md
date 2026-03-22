@@ -10,6 +10,8 @@ Execute a complete Sundai shipping run with no skipped steps. Default to this pi
 
 ## API-first enforcement (mandatory)
 - Use Sundai Website API as the default execution path for create/edit/submit/verify.
+- Prefer `SUNDAI_COOKIE_HEADER` from `.env.sundai` as the first auth source for cookie-backed API calls when it is available.
+- If API calls return `401`/`Unauthorized`, treat that as expired Sundai auth, report it explicitly in the current step update, and refresh/reacquire the cookie header before falling back to UI.
 - UI actions are fallback-only when API call fails or times out.
 - Every UI fallback must be explicitly reported with step number + reason.
 - After any write (API or UI), perform API readback verification whenever possible.
@@ -95,6 +97,7 @@ During execution, emit concise live status updates after each major phase using 
 
 4. **Create Sundai project (cookie-backed API mandatory-first)**
    - Reuse authenticated Sundai browser session (cookies) for API calls.
+   - If `SUNDAI_COOKIE_HEADER` exists in `.env.sundai`, use it before scraping/deriving cookies from the browser profile.
    - Start with API create by default; do not start with UI clicks unless API path is blocked.
    - Include: `Project Title`, `Brief Description`, `Launch Lead`, and team member **vyahhi** (Nikolay Vyahhi).
    - For API create, send `members` as structured objects (`id`, `role`) — not usernames/handles.
@@ -103,6 +106,7 @@ During execution, emit concise live status updates after each major phase using 
 
 5. **Edit details (cookie-backed API mandatory-first)**
    - Use API update for project fields by default using authenticated browser session cookies.
+   - Prefer `SUNDAI_COOKIE_HEADER` when present; only derive cookies from the browser profile if the env header is absent or expired.
    - Read current project first and preserve `participants` in PATCH payload unless intentionally changing team.
    - Do not send empty `participants` by default.
    - Fill at minimum:
@@ -136,6 +140,7 @@ During execution, emit concise live status updates after each major phase using 
 
 8. **Publish/submit (cookie-backed API mandatory-first)**
    - Use `PATCH /api/projects/{projectId}/submit` with JSON body `{ "status": "APPROVED" }` by default.
+   - Prefer `SUNDAI_COOKIE_HEADER` when present; on `401`, report expired auth and refresh/reacquire the cookie header before UI fallback.
    - Treat 200 as success.
    - If API is non-200, verify publish state.
    - Verification order:
@@ -220,6 +225,10 @@ Interpret as: run the full workflow above, including team member, post-save veri
   - `OPENROUTER_MODEL` (must be a free model from `https://openrouter.ai/openrouter/free`)
   - `GCP_PROJECT_ID`
   - `GCP_REGION` (recommended default: `us-central1`)
+- Preferred Sundai auth keys:
+  - `SUNDAI_COOKIE_HEADER` for cookie-backed API mode
+  - `SUNDAI_USERNAME`
+  - `SUNDAI_PASSWORD`
 - Always load env first in runs (e.g., `set -a; source .env.sundai; set +a`).
 - Load these vars before running local tests/deploy scripts.
 - Never commit API keys into repo code/README.

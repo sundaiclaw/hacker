@@ -61,6 +61,7 @@ This repo mirrors the VM-hosted OpenClaw deployment used for Sundai shipping. Th
 - `GCP_REGION`
 - `SUNDAI_USERNAME`
 - `SUNDAI_PASSWORD`
+- `SUNDAI_COOKIE_HEADER`
 
 ## Active identities
 
@@ -75,6 +76,7 @@ This repo mirrors the VM-hosted OpenClaw deployment used for Sundai shipping. Th
 ## Notes
 
 - Keep `/home/vyahhi/.openclaw/.env` out of git.
+- For reliable Sundai API-first runs, keep `SUNDAI_COOKIE_HEADER` current in `/home/vyahhi/.openclaw/.env`.
 - The live VM currently uses Telegram `streaming: "block"`.
 - The live VM currently uses `minimax/MiniMax-M2.7` as the default agent model.
 - The live VM currently uses `openrouter/free` as the model fallback.

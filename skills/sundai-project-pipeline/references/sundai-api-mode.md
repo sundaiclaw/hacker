@@ -5,9 +5,11 @@ Use API calls first for speed/reliability. Use UI only as fallback.
 ## Principles
 - Prefer API for create/update/submit/verify.
 - Reuse authenticated browser session cookies for API calls (cookie-backed API mode).
+- If `SUNDAI_COOKIE_HEADER` is present in `.env.sundai`, prefer it as the first auth source for API requests.
 - Keep browser UI for auth bootstrap and fallback only.
 - After every write, do readback verification before proceeding.
 - Log which step used fallback when API fails.
+- Treat `401` / `Unauthorized` as expired Sundai auth: report it clearly, refresh/reacquire the cookie header, then retry before UI fallback.
 
 ## Core endpoints (verified against sundai-website-v2)
 - List approved: `GET /api/projects?status=APPROVED`
