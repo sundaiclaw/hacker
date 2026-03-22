@@ -26,3 +26,13 @@ Public repo that mirrors the latest `sundai-project-pipeline` skill.
 ## Updating
 
 On each pipeline rule change, update `skills/sundai-project-pipeline/SKILL.md` in this repo and push.
+
+## Deployment Reference
+
+VM deployment artifacts for the current OpenClaw setup live in `deploy/`:
+
+- `Dockerfile`
+- `deploy/bootstrap-openclaw-vm.sh`
+- `deploy/openclaw.service`
+- `deploy/openclaw.json.example`
+- `deploy/openclaw-vm.md`
