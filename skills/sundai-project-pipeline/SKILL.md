@@ -46,9 +46,11 @@ During execution, emit concise live status updates after each major phase using 
      - `https://www.sundai.club/api/projects?status=APPROVED`
    - From those, identify 5-10 top-liked projects for inspiration.
    - Compare project themes and observed engagement (`likes` count/length) to avoid weak or repetitive ideas.
-   - Add **fresh external signal scan** (web/news) before final idea choice:
+   - Add **fresh external signal scan** (web/news) before final idea choice when available:
      - Use web search to pull recent agentic AI trends, launches, failures, and hot debates.
      - Prefer very recent signals (last days/weeks) and concrete shifts (new tools, policy changes, workflows, pain points).
+     - If web search is unavailable, rate-limited, or credit-blocked, do not stop the run.
+     - In that case, report the blocker in-progress, continue with Sundai approved-project analysis only, and choose an idea without the external scan.
    - Generate 3 candidate ideas, score each with this rubric (1-5 each), then choose highest total:
      - novelty/differentiation vs recent your+others projects
      - urgency of pain point

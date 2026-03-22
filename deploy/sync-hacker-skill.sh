@@ -2,7 +2,6 @@
 set -euo pipefail
 
 REPO=/home/vyahhi/.openclaw/workspace
-SKILL_LINK=/home/vyahhi/.openclaw/skills/sundai-project-pipeline
 TARGET=$REPO/skills/sundai-project-pipeline
 ENV_LINK=$REPO/.env.sundai
 ENV_TARGET=/home/vyahhi/.openclaw/.env
@@ -16,7 +15,6 @@ fi
 
 git -C "$REPO" fetch origin main
 git -C "$REPO" reset --hard origin/main
-ln -sfn "$TARGET" "$SKILL_LINK"
 ln -sfn "$ENV_TARGET" "$ENV_LINK"
 mkdir -p "$REPO/references"
 ln -sfn "$CHECKLIST_TARGET" "$CHECKLIST_LINK"

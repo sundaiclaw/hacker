@@ -43,7 +43,6 @@ cat >"${OPENCLAW_HOME}/bin/sync-hacker-skill.sh" <<EOF
 set -euo pipefail
 
 REPO=${OPENCLAW_HOME}/workspace
-SKILL_LINK=${OPENCLAW_HOME}/skills/sundai-project-pipeline
 TARGET=\$REPO/skills/sundai-project-pipeline
 ENV_LINK=\$REPO/.env.sundai
 ENV_TARGET=${OPENCLAW_HOME}/.env
@@ -57,7 +56,6 @@ fi
 
 git -C "\$REPO" fetch origin main
 git -C "\$REPO" reset --hard origin/main
-ln -sfn "\$TARGET" "\$SKILL_LINK"
 ln -sfn "\$ENV_TARGET" "\$ENV_LINK"
 mkdir -p "\$REPO/references"
 ln -sfn "\$CHECKLIST_TARGET" "\$CHECKLIST_LINK"

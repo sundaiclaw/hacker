@@ -26,8 +26,7 @@ This repo mirrors the VM-hosted OpenClaw deployment used for Sundai shipping. Th
 - pre-start sync script: `/home/vyahhi/.openclaw/bin/sync-hacker-skill.sh`
 - runtime config: `/home/vyahhi/.openclaw/openclaw.json`
 - workspace repo: `/home/vyahhi/.openclaw/workspace`
-- active skill path: `/home/vyahhi/.openclaw/skills/sundai-project-pipeline`
-- active skill target: `/home/vyahhi/.openclaw/workspace/skills/sundai-project-pipeline`
+- active skill path: `/home/vyahhi/.openclaw/workspace/skills/sundai-project-pipeline`
 
 ## Required setup
 
@@ -46,7 +45,6 @@ This repo mirrors the VM-hosted OpenClaw deployment used for Sundai shipping. Th
 - that pre-start script:
   - fetches `origin/main`
   - hard-resets the workspace repo to `origin/main`
-  - repoints the active skill symlink to the workspace copy
   - re-links `.env.sundai` and `references/checklist.md` inside the workspace
 - this guarantees the active `sundai-project-pipeline` skill is refreshed on every service restart
 - it does not re-pull before every message while the gateway stays up
