@@ -16,7 +16,7 @@ Execute a complete Sundai shipping run with no skipped steps. Default to this pi
 
 ## Progress Reporting (mandatory)
 During execution, emit concise live status updates after each major phase using numbered checkpoints:
-- `1/12 ...` through `12/12 ...`
+- `1/15 ...` through `15/15 ...`
 - Include concrete outputs as soon as available (repo URL, Render URL, Sundai URL)
 - If blocked, report exact blocker and current step number
 - Do not stay silent for long-running phases; send periodic progress updates

@@ -1,5 +1,9 @@
 # sundai-project-pipeline changelog
 
+## v1.19.1 - 2026-03-22
+- Fixed progress checkpoint guidance to match the current 15-step workflow (`1/15` through `15/15`).
+- Corrected mirror README to point at the local checklist reference file.
+
 ## v1.19.0 - 2026-03-15
 - Verified and enforced API-only thumbnail selection path:
   - generate images via API,

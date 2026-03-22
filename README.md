@@ -5,7 +5,7 @@
 Public repo that mirrors the latest `sundai-project-pipeline` skill.
 
 - Skill path: `skills/sundai-project-pipeline/SKILL.md`
-- Run checklist: (not present in local skill folder)
+- Run checklist: `skills/sundai-project-pipeline/references/checklist.md`
 
 ## Install in your own OpenClaw
 
