@@ -3,6 +3,7 @@
 ## v1.20.1 - 2026-03-22
 - Made the external web/news scan in step 1 non-blocking.
 - Added a required API-only Sundai approved-project fallback when web search is unavailable, rate-limited, or credit-blocked.
+- Tightened Telegram/chat runtime output so every operator-visible status line must include the step number and `Next:`.
 
 ## v1.20.0 - 2026-03-22
 - Tightened progress-reporting rules so every live update must include both the current step and the immediate next step.
