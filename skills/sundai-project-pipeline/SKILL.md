@@ -92,6 +92,10 @@ During execution, emit concise live status updates after each major phase using 
    - Deploy immediately after GitHub push using **GCP Cloud Run by default**.
    - Static-only projects may use GitHub Pages when Cloud Run is unnecessary.
    - If no deploy target/service exists for the repo, create one first.
+   - For any `gcloud` deploy/build command, always pass explicit flags:
+     - `--project "$GCP_PROJECT_ID"`
+     - `--region "$GCP_REGION"`
+   - Do not rely on the VM's default `gcloud` project/region config for deploys.
    - Capture live `Demo URL` and deployment id/reference as early as possible.
    - Do **not** block here on full health checks; health validation runs later.
 
@@ -231,6 +235,9 @@ Interpret as: run the full workflow above, including team member, post-save veri
   - `SUNDAI_PASSWORD`
 - Always load env first in runs (e.g., `set -a; source .env.sundai; set +a`).
 - Load these vars before running local tests/deploy scripts.
+- For `gcloud` commands, prefer explicit flags sourced from env:
+  - `--project "$GCP_PROJECT_ID"`
+  - `--region "$GCP_REGION"`
 - Never commit API keys into repo code/README.
 
 ## Reference

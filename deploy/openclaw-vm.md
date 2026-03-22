@@ -77,6 +77,8 @@ This repo mirrors the VM-hosted OpenClaw deployment used for Sundai shipping. Th
 
 - Keep `/home/vyahhi/.openclaw/.env` out of git.
 - For reliable Sundai API-first runs, keep `SUNDAI_COOKIE_HEADER` current in `/home/vyahhi/.openclaw/.env`.
+- Keep the VM `gcloud` default project set to the project ID `project-3930b9ab-6eae-4b3a-959`, not the numeric project number.
+- Even with the default fixed, deployment commands should still pass explicit `--project "$GCP_PROJECT_ID"` and `--region "$GCP_REGION"`.
 - The live VM currently uses Telegram `streaming: "block"`.
 - The live VM currently uses `minimax/MiniMax-M2.7` as the default agent model.
 - The live VM currently uses `openrouter/free` as the model fallback.

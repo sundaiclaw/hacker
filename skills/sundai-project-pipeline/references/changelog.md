@@ -1,5 +1,9 @@
 # sundai-project-pipeline changelog
 
+## v1.20.3 - 2026-03-22
+- Hardened Cloud Run deployment guidance to always pass explicit `gcloud` flags from env: `--project "$GCP_PROJECT_ID"` and `--region "$GCP_REGION"`.
+- Added guardrail to avoid relying on host-level default `gcloud` project/region config during Telegram/VM runs.
+
 ## v1.20.2 - 2026-03-22
 - Added `SUNDAI_COOKIE_HEADER` as the preferred auth source for Sundai cookie-backed API mode.
 - Added explicit `401` / `Unauthorized` handling: report expired auth, refresh/reacquire cookie header, then retry before UI fallback.
