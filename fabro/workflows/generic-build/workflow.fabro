@@ -1,0 +1,355 @@
+digraph GenericBuild {
+    graph [
+        goal="Read the project specification from $spec_dir/ and build it. \
+The $spec_dir/changes/ directory contains the proposal (what to build), \
+design (architecture and key decisions), and tasks (work breakdown). \
+The $spec_dir/specs/ directory contains detailed capability specs with \
+acceptance criteria. Implement everything according to these specs.\n\
+IMPORTANT: All generated code MUST be placed inside the $app_dir subdirectory \
+to keep it isolated from any existing code in the repo root. The $app_dir \
+directory is the project root for the new implementation — pyproject.toml, \
+package.json, source code, tests, and config files all go there. Do NOT \
+write files to the repo root.",
+        rankdir=LR,
+        default_max_retry=3,
+        retry_target="plan_fanout",
+        fallback_retry_target="plan_fanout",
+        model_stylesheet="
+            *          { model: claude-opus-4-6;   }
+            .code      { model: claude-sonnet-4-6; }
+            .review    { model: glm-4.7;           }
+            .cheap     { model: claude-haiku-4-5;  }
+            .plan-b    { model: glm-4.7;           }
+        "
+    ]
+
+    exit [shape=Msquare, label="Exit"]
+
+    // =========================================================================
+    // Bootstrap — verify toolchain
+    // =========================================================================
+
+    subgraph cluster_bootstrap {
+        label="Bootstrap"
+        start [shape=Mdiamond, label="Start"]
+
+        check_toolchain [
+            shape=parallelogram,
+            label="Check Toolchain",
+            max_retries=0,
+            script="APP_DIR=$app_dir bash fabro/workflows/generic-build/scripts/check-toolchain.sh 2>&1"
+        ]
+    }
+
+    // =========================================================================
+    // Planning — two models plan independently, then synthesize
+    // =========================================================================
+
+    subgraph cluster_planning {
+        label="Planning"
+        node [shape=box]
+
+        plan_fanout [shape=component, label="Plan Fan-Out"]
+
+        plan_a [
+            label="Plan A",
+            prompt="Read the full project specification:\n\
+- $spec_dir/changes/*/proposal.md (what to build, success criteria)\n\
+- $spec_dir/changes/*/design.md (architecture, tech stack, key decisions)\n\
+- $spec_dir/changes/*/tasks.md (work breakdown)\n\
+- All files in $spec_dir/specs/ (detailed capability specs)\n\n\
+If $workflow_dir/postmortem_latest.md exists, read it FIRST and incorporate its lessons.\n\n\
+Create a detailed implementation plan that:\n\
+1. Determines the correct dependency order for building each capability\n\
+2. Identifies the toolchain needed (languages, package managers, linters, test runners)\n\
+3. Maps each spec to concrete files that need to be created\n\
+4. Specifies the exact commands to install dependencies, run tests, and build\n\
+5. Notes any integration points between capabilities\n\n\
+CRITICAL: All implementation must go inside the $app_dir subdirectory. \
+The $app_dir directory is the project root — pyproject.toml, package.json, \
+source code, tests, frontend/, and config all live under $app_dir. \
+Do NOT place files in the repo root.\n\n\
+The plan must be actionable — a developer should be able to follow it step by step.\n\n\
+Write to $workflow_dir/plan_a.md."
+        ]
+
+        plan_b [
+            label="Plan B",
+            class="plan-b",
+            prompt="Read the full project specification:\n\
+- $spec_dir/changes/*/proposal.md (what to build, success criteria)\n\
+- $spec_dir/changes/*/design.md (architecture, tech stack, key decisions)\n\
+- $spec_dir/changes/*/tasks.md (work breakdown)\n\
+- All files in $spec_dir/specs/ (detailed capability specs)\n\n\
+If $workflow_dir/postmortem_latest.md exists, read it FIRST and incorporate its lessons.\n\n\
+Create a detailed implementation plan. Focus on:\n\
+- Project structure with file paths\n\
+- Module decomposition and interfaces between modules\n\
+- Dependency ordering (what must be built first)\n\
+- Configuration and environment setup\n\
+- Testing strategy (what to test, how to test it)\n\
+- Deployment approach\n\n\
+Write to $workflow_dir/plan_b.md."
+        ]
+
+        debate [
+            label="Debate & Consolidate",
+            prompt="Synthesize the two implementation plans into a single best-of-breed final plan.\n\n\
+Read parallel_results.json, or fall back to $workflow_dir/plan_a.md and $workflow_dir/plan_b.md.\n\n\
+If $workflow_dir/postmortem_latest.md exists, read it FIRST. The final plan MUST address \
+every issue identified in the postmortem.\n\n\
+Also read the design doc ($spec_dir/changes/*/design.md) for authoritative architecture decisions. \
+The design doc takes precedence over plan suggestions that contradict it.\n\n\
+Resolve conflicts between plans. Ensure dependency order is correct. Pick the most \
+detailed and actionable approach for each module.\n\n\
+Write the final plan to $workflow_dir/plan_final.md."
+        ]
+    }
+
+    // =========================================================================
+    // Human Approval
+    // =========================================================================
+
+    approve_plan [shape=hexagon, label="Approve Plan"]
+
+    // =========================================================================
+    // Implement — write the code
+    // =========================================================================
+
+    subgraph cluster_implement {
+        label="Implement"
+
+        implement [
+            class="code",
+            label="Implement",
+            prompt="Read the implementation plan and project specs:\n\
+- $workflow_dir/plan_final.md (implementation plan)\n\
+- $spec_dir/changes/*/design.md (architecture and key decisions)\n\
+- All files in $spec_dir/specs/ (detailed capability specs with acceptance criteria)\n\n\
+BEFORE ANYTHING ELSE: check if $workflow_dir/verify_errors.log exists. If it does, \
+read it — fix every error listed, then delete $workflow_dir/verify_errors.log. \
+Do NOT regenerate working code — only fix specific errors.\n\n\
+If $workflow_dir/postmortem_latest.md exists, read it and fix ONLY identified gaps.\n\n\
+On a fresh pass, check if target files already exist and are non-empty — skip them.\n\n\
+CRITICAL: All code MUST go inside the $app_dir subdirectory. The $app_dir directory \
+is the project root. Place pyproject.toml, package.json, source code, tests, \
+frontend/, config files, and .env.example all under $app_dir. Do NOT write to the repo root.\n\n\
+Follow the implementation plan step by step. For each capability spec:\n\
+1. Read the spec carefully, including acceptance criteria\n\
+2. Implement exactly what the spec describes\n\
+3. Respect the design doc's architecture decisions\n\n\
+After implementation, install dependencies as specified in the plan.\n\
+Log progress to $workflow_dir/implementation_log.md."
+        ]
+    }
+
+    // =========================================================================
+    // Review
+    // =========================================================================
+
+    subgraph cluster_review {
+        label="Review & Simplify"
+
+        review_code [
+            label="Review",
+            class="review",
+            prompt="Review the complete implementation against the project specs.\n\n\
+Read all source files and compare against:\n\
+- $spec_dir/changes/*/design.md (architecture)\n\
+- All files in $spec_dir/specs/ (capability specs with acceptance criteria)\n\n\
+Check for:\n\
+1. CORRECTNESS: Does the implementation match each spec's requirements?\n\
+2. SECURITY: No hardcoded secrets? Authentication enforced? CORS configured?\n\
+3. SIMPLICITY: Any over-engineered code? Can anything be simplified?\n\
+4. COMPLETENESS: All acceptance criteria from specs addressed?\n\
+5. CONSISTENCY: Types match API contracts? Frontend calls match backend routes?\n\n\
+For any issues found:\n\
+- Fix them directly in the source files\n\
+- Keep changes minimal — improve, don't rewrite\n\n\
+Log changes to $workflow_dir/review_log.md."
+        ]
+    }
+
+    // =========================================================================
+    // Verify — escalating checks
+    // =========================================================================
+
+    subgraph cluster_verify {
+        label="Verify"
+
+        verify_deps [
+            shape=parallelogram,
+            label="Install Deps",
+            max_retries=0,
+            script="APP_DIR=$app_dir bash fabro/workflows/generic-build/scripts/install-deps.sh 2>&1"
+        ]
+        gate_deps [shape=diamond, label="Deps OK?"]
+
+        verify_lint [
+            shape=parallelogram,
+            label="Lint",
+            script="APP_DIR=$app_dir bash fabro/workflows/generic-build/scripts/lint.sh 2>&1"
+        ]
+        gate_lint [shape=diamond, label="Lint OK?"]
+
+        fix_lints [
+            label="Fix Lints",
+            class="code",
+            prompt="The lint check failed. Read the lint output from context and fix all issues.",
+            max_visits=3
+        ]
+
+        verify_test [
+            shape=parallelogram,
+            label="Run Tests",
+            script="APP_DIR=$app_dir bash fabro/workflows/generic-build/scripts/test.sh 2>&1"
+        ]
+        gate_test [shape=diamond, label="Tests OK?"]
+
+        verify_typecheck [
+            shape=parallelogram,
+            label="Typecheck",
+            script="APP_DIR=$app_dir bash fabro/workflows/generic-build/scripts/typecheck.sh 2>&1"
+        ]
+        gate_typecheck [shape=diamond, label="Types OK?"]
+
+        verify_build [
+            shape=parallelogram,
+            label="Build",
+            script="APP_DIR=$app_dir bash fabro/workflows/generic-build/scripts/build.sh 2>&1"
+        ]
+        gate_build [shape=diamond, label="Build OK?"]
+
+        verify_structure [
+            label="Verify Structure",
+            class="cheap",
+            prompt="Read all source files and verify against the specs.\n\n\
+For each spec in $spec_dir/specs/:\n\
+1. Read the spec's acceptance criteria\n\
+2. Check if the implementation satisfies each criterion\n\
+3. Verify API routes, data contracts, and integration points match\n\n\
+If all pass: {\"context_updates\": {\"structure_ok\": \"true\"}}\n\
+If any fail, write issues to $workflow_dir/verify_errors.log and:\n\
+{\"context_updates\": {\"structure_ok\": \"false\"}}"
+        ]
+        gate_structure [shape=diamond, label="Structure OK?"]
+    }
+
+    // =========================================================================
+    // Format
+    // =========================================================================
+
+    format_code [
+        shape=parallelogram,
+        label="Format Code",
+        goal_gate=true,
+        max_retries=0,
+        script="APP_DIR=$app_dir bash fabro/workflows/generic-build/scripts/format.sh 2>&1"
+    ]
+
+    // =========================================================================
+    // Human Review & Polish
+    // =========================================================================
+
+    review_app [shape=hexagon, label="Review App"]
+
+    polish [
+        label="Polish",
+        class="code",
+        prompt="Read the proposal ($spec_dir/changes/*/proposal.md) for the product vision \
+and design philosophy.\n\n\
+Review and improve the implementation for quality and polish:\n\
+1. UI should match the design philosophy described in the proposal\n\
+2. Loading states for async operations\n\
+3. Empty states with helpful messages\n\
+4. Error states with actionable guidance\n\
+5. Responsive layout for mobile\n\
+6. Smooth transitions and micro-interactions\n\n\
+Keep changes minimal and focused on user-facing quality."
+    ]
+
+    // =========================================================================
+    // Postmortem — analyze failures, feed back
+    // =========================================================================
+
+    postmortem [
+        label="Postmortem",
+        prompt="Analyze the failure and guide the next repair iteration.\n\n\
+Read (if they exist):\n\
+- $workflow_dir/verify_errors.log\n\
+- $workflow_dir/implementation_log.md\n\
+- $workflow_dir/review_log.md\n\n\
+Also read the specs ($spec_dir/specs/) to understand what SHOULD have been built.\n\n\
+Output to $workflow_dir/postmortem_latest.md (overwrite previous):\n\
+- Root causes of failure\n\
+- What works and must be preserved\n\
+- What failed and must be fixed\n\
+- Concrete next changes (specific files, specific fixes)\n\
+- Do NOT direct from-scratch restart — preserve working code\n\n\
+Respond with:\n\
+{\"preferred_next_label\": \"replan\"}"
+    ]
+
+    // =========================================================================
+    // Edges
+    // =========================================================================
+
+    // Bootstrap
+    start -> check_toolchain
+    check_toolchain -> plan_fanout [condition="outcome=success"]
+    check_toolchain -> postmortem
+
+    // Planning fanout
+    plan_fanout -> plan_a
+    plan_fanout -> plan_b
+    plan_a -> debate
+    plan_b -> debate
+    debate -> approve_plan
+
+    // Human approval
+    approve_plan -> implement [label="[A] Approve"]
+    approve_plan -> plan_fanout [label="[R] Revise"]
+
+    // Implement -> Review -> Verify chain
+    implement -> review_code
+    review_code -> verify_deps
+
+    // Verify chain
+    verify_deps -> gate_deps
+    gate_deps -> verify_lint [condition="outcome=success"]
+    gate_deps -> implement
+
+    verify_lint -> gate_lint
+    gate_lint -> verify_test [condition="outcome=success"]
+    gate_lint -> fix_lints
+    fix_lints -> verify_lint
+
+    verify_test -> gate_test
+    gate_test -> verify_typecheck [condition="outcome=success"]
+    gate_test -> implement
+
+    verify_typecheck -> gate_typecheck
+    gate_typecheck -> verify_build [condition="outcome=success"]
+    gate_typecheck -> implement
+
+    verify_build -> gate_build
+    gate_build -> verify_structure [condition="outcome=success"]
+    gate_build -> implement
+
+    verify_structure -> gate_structure
+    gate_structure -> format_code [condition="context.structure_ok=true"]
+    gate_structure -> implement
+
+    // Format -> Human review
+    format_code -> review_app
+
+    // Human review
+    review_app -> polish [label="[A] Approve"]
+    review_app -> implement [label="[R] Rebuild"]
+
+    // Polish -> done
+    polish -> exit
+
+    // Postmortem recovery
+    postmortem -> plan_fanout [label="Replan"]
+}
