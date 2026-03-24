@@ -232,8 +232,8 @@ After Fabro build completes, generate and run a browser testing workflow to vali
    ```
    fabro/workflows/browser-testing/
      workflow.fabro        # test pipeline (build → serve → parallel tests → report)
-     workflow.toml         # run config (agent-browser install in setup)
-     prompts/              # test suites in plain English + agent-browser commands
+     workflow.toml         # run config (vibium install in setup)
+     prompts/              # test suites in plain English + vibium commands
        test_visual.md      # screen appearance verification
        test_controls.md    # keyboard/mouse/touch interaction tests
        test_logic.md       # business logic and state management tests
@@ -242,11 +242,12 @@ After Fabro build completes, generate and run a browser testing workflow to vali
    ```
 
 **Key design:**
-- Tests use [agent-browser](https://agent-browser.dev) CLI — no Playwright scripts needed
-- Test prompts are plain English with embedded `agent-browser` commands (open, press, screenshot, record)
+- Tests use [Vibium](https://github.com/VibiumDev/vibium) CLI — no Playwright scripts needed
+- Test prompts are plain English with embedded `vibium` commands (go, keys, screenshot, map, diff, record)
 - Parallel test suites (visual, controls, logic) each run in their own browser
-- `agent-browser record start/stop` captures WebM video walkthroughs for demos
-- Results go in timestamped directories (`test-results/YYYY-MM-DD_HH-MM-SS/`) with `screenshots/` and `videos/` subdirs
+- `vibium record start/stop` captures session recordings (ZIP of screenshots + snapshots)
+- `vibium diff map` verifies what changed; `vibium screenshot --annotate` labels elements
+- Results go in timestamped directories (`test-results/YYYY-MM-DD_HH-MM-SS/`) with `screenshots/` and `recordings/` subdirs
 
 **Run it:**
 

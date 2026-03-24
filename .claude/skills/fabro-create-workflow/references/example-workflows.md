@@ -264,16 +264,18 @@ provider = "local"
 worktree_mode = "always"
 ```
 
-## 10. Browser-Based UI Testing with agent-browser
+## 10. Browser-Based UI Testing with Vibium
 
-Parallel browser test suites that validate a web app's UI and interactions using [agent-browser](https://agent-browser.dev) CLI commands. Each test agent opens the app, interacts like a human, takes screenshots, records video, and writes results to a timestamped directory.
+Parallel browser test suites that validate a web app's UI and interactions using [Vibium](https://github.com/VibiumDev/vibium) CLI commands. Each test agent opens the app, interacts like a human, takes screenshots, records the session, and writes results to a timestamped directory.
 
 **Key patterns:**
-- Test agents use `backend: cli` so they get shell access to run `agent-browser` commands
+- Test agents use `backend: cli` so they get shell access to run `vibium` commands
 - Tests are written in plain English with embedded CLI commands — no Playwright scripts needed
 - A `setup_dirs` node creates a timestamped output directory (`YYYY-MM-DD_HH-MM-SS`) so runs don't overwrite each other
-- Screenshots go in a `screenshots/` subdir, videos in `videos/`, result markdown at the root
-- `agent-browser record start/stop` captures WebM video of each test suite for demo purposes
+- Screenshots go in a `screenshots/` subdir, recordings in `recordings/`, result markdown at the root
+- `vibium record start/stop` captures session recordings (ZIP of screenshots + snapshots)
+- `vibium diff map` verifies what changed after each interaction
+- `vibium screenshot --annotate` labels interactive elements with numbers for visual verification
 
 ```dot
 digraph BrowserTesting {
@@ -291,7 +293,7 @@ digraph BrowserTesting {
     exit  [shape=Msquare, label="Exit"]
 
     build [label="Build App", shape=parallelogram, script="bun run build 2>&1"]
-    setup_dirs [label="Setup Output Dirs", shape=parallelogram, script="export RUN_ID=$(date '+%Y-%m-%d_%H-%M-%S') && echo $RUN_ID > /tmp/test-run-id && mkdir -p test-results/$RUN_ID/screenshots test-results/$RUN_ID/videos && echo \"Run directory: test-results/$RUN_ID\""]
+    setup_dirs [label="Setup Output Dirs", shape=parallelogram, script="export RUN_ID=$(date '+%Y-%m-%d_%H-%M-%S') && echo $RUN_ID > /tmp/test-run-id && mkdir -p test-results/$RUN_ID/screenshots test-results/$RUN_ID/recordings && echo \"Run directory: test-results/$RUN_ID\""]
     serve [label="Start Server", shape=parallelogram, script="python3 -m http.server 9753 &>/dev/null & echo $! > /tmp/test-server.pid && sleep 1 && echo 'Server ready'"]
 
     fork [label="Run Test Suites", shape=component, join_policy="wait_all", error_policy="continue"]
@@ -302,7 +304,7 @@ digraph BrowserTesting {
 
     merge [label="Collect Results", shape=tripleoctagon]
 
-    stop_server [label="Stop Server", shape=parallelogram, script="kill $(cat /tmp/test-server.pid 2>/dev/null) 2>/dev/null; rm -f /tmp/test-server.pid; agent-browser close 2>/dev/null; echo 'Cleanup done'"]
+    stop_server [label="Stop Server", shape=parallelogram, script="kill $(cat /tmp/test-server.pid 2>/dev/null) 2>/dev/null; rm -f /tmp/test-server.pid; vibium stop 2>/dev/null; echo 'Cleanup done'"]
 
     check [shape=diamond, label="All tests passed?"]
     report_pass [label="Pass Report", class="reporting", prompt="@prompts/report_pass.md", shape=tab]
@@ -334,7 +336,7 @@ version = 1
 graph = "workflow.fabro"
 
 [setup]
-commands = ["bun install", "agent-browser install 2>/dev/null || true"]
+commands = ["bun install", "vibium install 2>/dev/null || npx vibium install 2>/dev/null || true"]
 timeout_ms = 60000
 
 [sandbox]
@@ -358,23 +360,24 @@ test-results/
     REPORT.md
     screenshots/
       v1-waiting-screen.png
+      v1-waiting-annotated.png
       v2-playing-screen.png
       g1-before.png
       ...
-    videos/
-      visual-walkthrough.webm
-      gameplay-controls.webm
-      scoring-progression.webm
+    recordings/
+      visual-session.zip
+      gameplay-session.zip
+      scoring-session.zip
 ```
 
-**Writing test prompts for agent-browser:** Each test prompt file should include:
+**Writing test prompts for Vibium:** Each test prompt file should include:
 
-1. A quick-reference of `agent-browser` commands the agent will need
+1. A quick-reference of `vibium` commands the agent will need
 2. A setup block that reads the run ID: `RUN_ID=$(cat /tmp/test-run-id)`
-3. `agent-browser record start` at the beginning to capture video
+3. `vibium record start` at the beginning to capture the session
 4. Test cases written in plain English with embedded CLI commands
 5. Expected outcomes to verify visually from screenshots
-6. `agent-browser record stop` and `agent-browser close` in cleanup
+6. `vibium record stop` and `vibium stop` in cleanup
 7. Output format (write results to `test-results/$$RUN_ID/<suite>.md`)
 
 Example test prompt structure:
@@ -382,43 +385,51 @@ Example test prompt structure:
 ```markdown
 # Test Suite Name
 
-Use `agent-browser` CLI to test the app.
+Use `vibium` CLI to test the app.
 
-## How to use agent-browser
-agent-browser open <url>              # Navigate to URL
-agent-browser snapshot                # Accessibility tree with @refs
-agent-browser snapshot -i             # Interactive elements only
-agent-browser screenshot <path>       # Capture screenshot
-agent-browser press <key>             # Press key (ArrowLeft, Space, Enter, etc.)
-agent-browser click @e1               # Click element by ref
-agent-browser type @e1 <text>         # Type into element
-agent-browser eval <js>               # Run JavaScript
-agent-browser record start <path>     # Start video recording (WebM)
-agent-browser record stop             # Stop recording
-agent-browser close                   # Close browser
+## How to use vibium
+vibium go <url>                       # Navigate to URL
+vibium map                            # Map interactive elements with @refs
+vibium a11y-tree                      # Full accessibility tree
+vibium screenshot -o <path>           # Capture screenshot
+vibium screenshot -o <path> --annotate # Screenshot with numbered element labels
+vibium keys <key>                     # Press key (ArrowLeft, Space, Enter, etc.)
+vibium click @e1                      # Click element by ref
+vibium fill @e1 <text>                # Clear and fill element
+vibium find text "Sign In"            # Find element by visible text
+vibium find role button               # Find element by ARIA role
+vibium is visible "<selector>"        # Check element visibility (true/false)
+vibium diff map                       # Compare current vs last map
+vibium eval "<js>"                    # Run JavaScript
+vibium record start                   # Start session recording
+vibium record stop -o <path>          # Stop recording, save ZIP
+vibium stop                           # Stop browser
 
 ## Setup
 RUN_ID=$(cat /tmp/test-run-id)
-agent-browser open http://localhost:9753
-agent-browser record start test-results/$$RUN_ID/videos/suite-name.webm
+vibium go http://localhost:9753
+vibium record start --title "Suite Name"
 
 ## TC-1: Test Case Name
 [Plain English description of what to do and what to expect]
-agent-browser press Enter
-agent-browser screenshot test-results/$$RUN_ID/screenshots/tc1.png
+vibium keys Enter
+vibium screenshot -o test-results/$$RUN_ID/screenshots/tc1.png
+vibium diff map
 Verify: [what should be visible in the screenshot]
 
 ## Cleanup
-agent-browser record stop
-agent-browser close
+vibium record stop -o test-results/$$RUN_ID/recordings/suite-session.zip
+vibium stop
 
 Write results to test-results/$$RUN_ID/suite-name.md
 ```
 
 **Tips:**
 - Canvas-based apps can't be inspected via DOM — use screenshots for visual verification
-- For DOM-based apps, use `agent-browser snapshot -i` to find interactive element refs, then `click @ref`
-- agent-browser output is compact text (not JSON) — optimized for AI token efficiency
+- For DOM-based apps, use `vibium map` to get @refs, then `vibium click @ref`; use `vibium find text/role/label` for semantic discovery
+- Use `vibium screenshot --annotate` to overlay numbered labels on interactive elements
+- Use `vibium diff map` after interactions to verify what changed in the DOM
+- Use `vibium is visible/enabled/checked` for deterministic state assertions
 - Each parallel test agent gets its own browser session — no conflicts
-- Video recording captures the full interaction for demos and debugging — especially useful for games and animations
+- Session recordings capture screenshots after every action — useful for debugging
 - Timestamped directories sort newest-first and prevent overwriting previous runs

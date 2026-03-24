@@ -38,7 +38,7 @@ Pick the simplest topology that satisfies the requirements. See `references/exam
 | **Parallel fan-out** | Independent analyses merged into synthesis |
 | **Multi-model ensemble** | Multiple providers give independent opinions |
 | **Production pipeline** | Toolchain checks + implement + verify + fixup loops |
-| **Browser UI testing** | Validate web app screens and interactions with agent-browser |
+| **Browser UI testing** | Validate web app screens and interactions with Vibium |
 
 Combine patterns as needed. For example, a production pipeline might include a human gate after planning and a parallel fan-out for review.
 
@@ -100,38 +100,46 @@ graph [model_stylesheet="
 - Use `reasoning_effort="high"` for complex coding tasks
 - For ensembles, pick models from different providers for diversity
 
-### Step 5b: Browser Testing with agent-browser
+### Step 5b: Browser Testing with Vibium
 
-When the workflow involves validating a web app's UI, use [agent-browser](https://agent-browser.dev) instead of Playwright MCP or custom test scripts. agent-browser is a CLI tool that AI agents call via shell commands — tests are written in plain English with embedded commands.
+When the workflow involves validating a web app's UI, use [Vibium](https://github.com/VibiumDev/vibium) instead of Playwright MCP or custom test scripts. Vibium is a browser automation CLI built for AI agents — tests are written in plain English with embedded commands.
 
-**Setup:** Add `agent-browser install` to the TOML `[setup]` commands. No MCP server config needed.
+**Setup:** Add `vibium install` to the TOML `[setup]` commands. No MCP server config needed.
 
 **Key commands:**
 ```bash
-agent-browser open <url>              # Navigate to URL
-agent-browser snapshot                # Accessibility tree with @refs (for AI)
-agent-browser snapshot -i             # Interactive elements only
-agent-browser screenshot <path>       # Capture screenshot
-agent-browser press <key>             # Press key (ArrowLeft, Space, Enter, p, etc.)
-agent-browser click @e1               # Click element by ref from snapshot
-agent-browser type @e1 <text>         # Type into element
-agent-browser fill @e1 <text>         # Clear and fill element
-agent-browser eval <js>               # Run JavaScript in page
-agent-browser record start <path>     # Start video recording (WebM)
-agent-browser record stop             # Stop video recording
-agent-browser close                   # Close browser
+vibium go <url>                       # Navigate to URL
+vibium map                            # Map interactive elements with @refs
+vibium a11y-tree                      # Full accessibility tree
+vibium screenshot -o <path>           # Capture screenshot
+vibium screenshot -o <path> --annotate # Screenshot with numbered element labels
+vibium keys <key>                     # Press key (ArrowLeft, Space, Enter, p, etc.)
+vibium click @e1                      # Click element by ref from map
+vibium type @e1 <text>                # Type into element
+vibium fill @e1 <text>                # Clear and fill element
+vibium eval "<js>"                    # Run JavaScript in page
+vibium find text "Sign In"            # Find element by visible text
+vibium find role button               # Find element by ARIA role
+vibium is visible "<selector>"        # Check if element is visible (true/false)
+vibium diff map                       # Compare current vs last map (what changed)
+vibium record start                   # Start recording (screenshots + snapshots)
+vibium record stop -o <path>          # Stop recording, save to ZIP
+vibium stop                           # Stop browser
 ```
 
 **Design rules:**
-- Use `backend: cli` on test agent nodes so they get shell access to run agent-browser
-- Write test prompts in plain English with embedded agent-browser commands
-- Use `agent-browser snapshot -i` for DOM-based apps to find interactive elements
-- Use `agent-browser screenshot` for canvas-based apps where DOM inspection won't work
-- Use `agent-browser record start/stop` to capture video walkthroughs — especially useful for games and animations
+- Use `backend: cli` on test agent nodes so they get shell access to run vibium
+- Write test prompts in plain English with embedded vibium commands
+- Use `vibium map` to discover interactive elements, then `vibium click @ref`
+- Use `vibium find text/role/label` for semantic element discovery in DOM-based apps
+- Use `vibium screenshot -o <path> --annotate` for annotated screenshots that label interactive elements
+- Use `vibium diff map` after interactions to verify what changed
+- Use `vibium is visible/enabled/checked` for state assertions
+- Use `vibium record start/stop` to capture session recordings (ZIP of screenshots + snapshots)
 - Each parallel test agent gets its own browser session — safe to fan out
-- Always include `agent-browser record stop` and `agent-browser close` in cleanup
+- Always include `vibium record stop` and `vibium stop` in cleanup
 - Create a timestamped output directory (`YYYY-MM-DD_HH-MM-SS`) so test runs don't overwrite each other
-- Store screenshots in a `screenshots/` subdir and videos in `videos/` within the run directory
+- Store screenshots in a `screenshots/` subdir and recordings in `recordings/` within the run directory
 - **Critical `$` escaping:** Fabro expands `$var` in `@prompt` files before the LLM sees them — use `$$RUN_ID` there so it becomes `$RUN_ID`. But `script=` attributes go directly to the shell with NO expansion — use plain `$RUN_ID` in scripts.
 
 See `references/example-workflows.md` example 10 for a complete browser testing workflow.
