@@ -4,3 +4,8 @@
 !.env.example
 !.env*.example
 
+.workflow/
+openspec/
+apps/
+fabro-repo/
+openclaw-skills/
