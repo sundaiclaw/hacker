@@ -22,7 +22,8 @@
       "groupAllowFrom": [
         "your_telegram_user_id"
       ],
-      "streaming": "block"
+      "streaming": "block",
+      "dmHistoryLimit": 20
     }
   },
   "gateway": {
