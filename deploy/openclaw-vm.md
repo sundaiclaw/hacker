@@ -6,8 +6,7 @@ This repo mirrors the VM-hosted OpenClaw deployment used for Sundai shipping. Th
 - OS family: Ubuntu/Debian-compatible Linux
 - process manager: `systemd`
 - browser: `google-chrome-stable` in headless mode
-- model provider: MiniMax via the Anthropic-compatible endpoint
-- model fallback: OpenRouter free router
+- model provider: OpenAI via the Chat Completions API
 - bot channel: Telegram
 
 ## Files
@@ -54,8 +53,7 @@ This repo mirrors the VM-hosted OpenClaw deployment used for Sundai shipping. Th
 - `OPENCLAW_GATEWAY_TOKEN`
 - `TELEGRAM_BOT_TOKEN`
 - `TELEGRAM_USER_ID`
-- `MINIMAX_API_KEY`
-- `MINIMAX_MODEL`
+- `OPENAI_API_KEY`
 - `GITHUB_TOKEN`
 - `GCP_PROJECT_ID`
 - `GCP_REGION`
@@ -81,6 +79,5 @@ This repo mirrors the VM-hosted OpenClaw deployment used for Sundai shipping. Th
 - Keep the VM `gcloud` default project set to the project ID `project-3930b9ab-6eae-4b3a-959`, not the numeric project number.
 - Even with the default fixed, deployment commands should still pass explicit `--project "$GCP_PROJECT_ID"` and `--region "$GCP_REGION"`.
 - The live VM currently uses Telegram `streaming: "block"`.
-- The live VM currently uses `minimax/MiniMax-M2.7` as the default agent model.
-- The live VM currently uses `openrouter/free` as the model fallback.
+- The live VM currently uses `openai/gpt-5.4` via `openai-completions` as the default agent model.
 - If the skill expects workspace-relative files like `.env.sundai` or `references/checklist.md`, the pre-start sync script re-links them into `/home/vyahhi/.openclaw/workspace`.
