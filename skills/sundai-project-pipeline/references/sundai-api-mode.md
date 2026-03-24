@@ -31,13 +31,14 @@ curl -H "Cookie: $COOKIE" https://www.sundai.club/api/projects?status=APPROVED
 - `deploy/refresh-sundai-auth.sh --update` — updates `.env.sundai` with fresh auth
 - `deploy/refresh-sundai-auth.sh --test` — verifies API access works
 
-## Core endpoints (verified against sundai-website-v2)
+## Core endpoints (verified against sundai-website-v2 + live run)
 - List approved: `GET /api/projects?status=APPROVED`
 - Create project: `POST /api/projects` (FormData)
 - Read project: `GET /api/projects/{projectId}`
 - Edit/save: `PATCH /api/projects/{projectId}/edit` (FormData)
 - Submit/publish or delist: `PATCH /api/projects/{projectId}/submit` (JSON body)
 - Generate images: `POST /api/projects/{projectId}/generate-images` (JSON body)
+- Like project: `POST /api/projects/{projectId}/like`
 
 ## Submit payload (verified)
 `PATCH /api/projects/{projectId}/submit` expects JSON body:
@@ -134,3 +135,4 @@ Observed example:
 - `teamMembers` includes `vyahhi` (if API misses it, enforce UI add-member fallback)
 - `demoUrl` persisted after deployment
 - submit response OK / project in Delist state
+- like step can be satisfied via `POST /api/projects/{projectId}/like`; verify by readback (`likes[]` includes bot hacker id or count increments)

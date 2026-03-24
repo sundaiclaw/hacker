@@ -1,5 +1,10 @@
 # sundai-project-pipeline changelog
 
+## v1.21.1 - 2026-03-24 22:32 UTC
+- Confirmed the self-like API path in live production: `POST /api/projects/{projectId}/like`.
+- Added verification guidance to treat a populated `likes[]` readback as sufficient like-state proof.
+- Updated API reference wording to distinguish live-run confirmation from code-verified endpoints.
+
 ## v1.21.0 - 2026-03-22
 - Replaced static `SUNDAI_COOKIE_HEADER` (60s expiry) with durable Clerk auth via `deploy/refresh-sundai-auth.sh`.
 - New env vars: `SUNDAI_CLERK_CLIENT` (long-lived ~10yr client JWT) + `SUNDAI_SESSION_ID` (active session).
