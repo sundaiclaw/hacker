@@ -33,6 +33,11 @@ apt-get install -y gh google-chrome-stable
 npm install -g openclaw
 
 id -u "${USERNAME}" >/dev/null 2>&1 || useradd --create-home --shell /bin/bash "${USERNAME}"
+
+# Set git identity to sundaiclaw so commits/repos are attributed correctly
+sudo -u "${USERNAME}" git config --global user.name "sundaiclaw"
+sudo -u "${USERNAME}" git config --global user.email "266542949+sundaiclaw@users.noreply.github.com"
+
 install -d -o "${USERNAME}" -g "${USERNAME}" "${OPENCLAW_HOME}"
 install -d -o "${USERNAME}" -g "${USERNAME}" "${OPENCLAW_HOME}/bin"
 install -d -o "${USERNAME}" -g "${USERNAME}" "${OPENCLAW_HOME}/workspace"
@@ -46,8 +51,8 @@ REPO=${OPENCLAW_HOME}/workspace
 TARGET=\$REPO/skills/sundai-project-pipeline
 ENV_LINK=\$REPO/.env.sundai
 ENV_TARGET=${OPENCLAW_HOME}/.env
-CHECKLIST_LINK=\$REPO/references/checklist.md
-CHECKLIST_TARGET=\$TARGET/references/checklist.md
+REFS_SRC=\$TARGET/references
+REFS_LINK=\$REPO/references
 
 if [ ! -d "\$REPO/.git" ]; then
   echo "workspace repo missing: \$REPO" >&2
@@ -57,8 +62,12 @@ fi
 git -C "\$REPO" fetch origin main
 git -C "\$REPO" reset --hard origin/main
 ln -sfn "\$ENV_TARGET" "\$ENV_LINK"
-mkdir -p "\$REPO/references"
-ln -sfn "\$CHECKLIST_TARGET" "\$CHECKLIST_LINK"
+mkdir -p "\$REFS_LINK"
+for f in checklist.md ai-endpoint.md sundai-api-mode.md changelog.md; do
+  ln -sfn "\$REFS_SRC/\$f" "\$REFS_LINK/\$f"
+done
+
+echo "synced_hacker_repo=\$(git -C "\$REPO" rev-parse --short HEAD)"
 EOF
 
 chmod 755 "${OPENCLAW_HOME}/bin/sync-hacker-skill.sh"
