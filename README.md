@@ -2,7 +2,7 @@
 
 # Sundai Hacker
 
-Autonomous Sundai Club project shipping bot powered by [OpenClaw](https://github.com/nichochar/openclaw) + OpenAI gpt-5.4.
+Autonomous Sundai Club hacker, powered by [OpenClaw](https://github.com/open-claw/openclaw).
 
 ## What's inside
 
