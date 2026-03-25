@@ -30,7 +30,13 @@ echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/githubc
 
 apt-get update
 apt-get install -y gh google-chrome-stable
-npm install -g openclaw fabro
+npm install -g openclaw
+
+# Install fabro (Rust binary from https://fabro.sh, NOT the npm package)
+# Requires GH_TOKEN in environment for gh release download
+curl -fsSL https://fabro.sh/install.sh | bash
+cp "${HOME}/.fabro/bin/fabro" /usr/local/bin/fabro
+chmod 755 /usr/local/bin/fabro
 
 id -u "${USERNAME}" >/dev/null 2>&1 || useradd --create-home --shell /bin/bash "${USERNAME}"
 

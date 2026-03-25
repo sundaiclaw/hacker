@@ -3,7 +3,7 @@
 This repo mirrors the VM-hosted OpenClaw deployment used for Sundai shipping. The current runtime shape is:
 
 - host: Compute Engine VM
-- OS family: Ubuntu/Debian-compatible Linux
+- OS: Debian 13 (trixie), glibc 2.41
 - process manager: `systemd`
 - browser: `google-chrome-stable` in headless mode
 - model provider: OpenAI via the Chat Completions API
@@ -74,7 +74,10 @@ This repo mirrors the VM-hosted OpenClaw deployment used for Sundai shipping. Th
 
 ## Build tools
 
-- `fabro` installed globally via `npm install -g fabro`
+- `fabro` is a Rust binary from https://fabro.sh (NOT the npm package, which is a fake)
+- Installed via `curl -fsSL https://fabro.sh/install.sh | bash`, then copied to `/usr/local/bin/fabro`
+- Requires `GH_TOKEN` in environment during install (uses `gh release download`)
+- VM OS must have glibc >= 2.38 (Debian 13+ or Ubuntu 24.04+)
 - Used by `sundai-project-pipeline` step 2 to run `fabro run sundai-ship --auto-approve --non-interactive`
 - Workflow definition: `fabro/workflows/sundai-ship/workflow.fabro`
 
