@@ -30,7 +30,7 @@ echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/githubc
 
 apt-get update
 apt-get install -y gh google-chrome-stable
-npm install -g openclaw
+npm install -g openclaw @fission-ai/openspec
 
 # Install fabro (Rust binary from https://fabro.sh, NOT the npm package)
 # Requires GH_TOKEN in environment for gh release download
