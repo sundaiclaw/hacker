@@ -1,0 +1,6 @@
+version = 1
+
+[vars]
+app_dir = "app"
+spec_dir = "spec"
+workflow_dir = ".workflow"

@@ -94,8 +94,14 @@ During execution, emit concise live status updates after each major phase using 
    - If user already gave a fixed idea, keep it; otherwise pick the best idea from this step.
    - Keep project title <= 32 chars and brief description <= 100 chars.
 
-2. **Build MVP with mandatory AI integration + create NEW GitHub repo + push**
-   - Create a minimal but runnable MVP.
+2. **Build MVP via Fabro workflow + create NEW GitHub repo + push**
+   - Create a **new public GitHub repo** first (no reusing old project repos).
+   - Clone the repo, then set up the Fabro build inside it:
+     1. Write a spec file at `spec/spec.md` describing: project name, what it does, tech stack, AI integration requirements, demo flow.
+     2. Copy the `fabro/` directory and `fabro.toml` from this workspace into the new repo.
+     3. Run: `fabro run sundai-ship --auto-approve --non-interactive`
+     4. This executes the plan → implement → verify (deps, lint, build) pipeline automatically.
+   - If `fabro` is not available or fails, fall back to building the MVP manually (scaffold code directly).
    - **Mandatory:** each project must use AI in-product via OpenRouter **free** models.
    - Use this provider config (from environment variables, never hardcode secrets):
      - `OPENROUTER_BASE_URL=https://openrouter.ai/api/v1`
@@ -105,7 +111,6 @@ During execution, emit concise live status updates after each major phase using 
    - AI must be **user-facing and core to value** (not hidden test endpoint only).
    - Render AI responses in a human-friendly UI format (markdown/rendered text), not raw/plain unformatted dumps.
    - Reject ideas that can be delivered equivalently without AI.
-   - Create a **new public GitHub repo for this run** (no reusing old project repos).
    - Push code and verify repo URL resolves publicly.
    - Capture repo URL for Sundai `GitHub URL` field.
 

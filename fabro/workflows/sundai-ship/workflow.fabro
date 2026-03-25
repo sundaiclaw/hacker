@@ -1,0 +1,107 @@
+digraph SundaiShip {
+    graph [
+        goal="Build a demoable Sundai MVP from the spec in $spec_dir/. \
+The app must include a real AI integration via OpenRouter (free model). \
+All code goes in $app_dir/. After building, verify it runs.",
+        rankdir=LR,
+        default_max_retry=2,
+        retry_target="implement",
+        fallback_retry_target="implement",
+        model_stylesheet="
+            *          { model: openai/gpt-5.4;  }
+            .cheap     { model: openai/gpt-5.4;  }
+        "
+    ]
+
+    exit [shape=Msquare, label="Exit"]
+
+    // =========================================================================
+    // Plan — read spec, produce implementation plan
+    // =========================================================================
+
+    start [shape=Mdiamond, label="Start"]
+
+    plan [
+        shape=tab,
+        label="Plan",
+        prompt="Read the project spec from $spec_dir/spec.md.\n\
+Create a concise implementation plan:\n\
+1. Tech stack and file structure\n\
+2. Key components and their interactions\n\
+3. How AI (OpenRouter free model) integrates into the user-facing flow\n\
+4. What the demo flow looks like\n\
+Write plan to $workflow_dir/plan.md."
+    ]
+
+    // =========================================================================
+    // Implement — write all the code
+    // =========================================================================
+
+    implement [
+        shape=box,
+        label="Implement",
+        prompt="Read $workflow_dir/plan.md and the spec at $spec_dir/spec.md.\n\
+If $workflow_dir/verify_errors.log exists, read it FIRST and fix those errors.\n\n\
+Build the full MVP inside $app_dir/:\n\
+- All source code, configs, package files go in $app_dir/\n\
+- Include a Dockerfile for Cloud Run deployment\n\
+- AI must call OpenRouter via env vars OPENROUTER_BASE_URL, OPENROUTER_API_KEY, OPENROUTER_MODEL\n\
+- Never hardcode secrets\n\
+- Make the UI clean and demoable\n\
+- Include a README with setup instructions"
+    ]
+
+    // =========================================================================
+    // Verify — install deps, lint, test, build
+    // =========================================================================
+
+    verify_deps [
+        shape=parallelogram,
+        label="Install Deps",
+        max_retries=0,
+        script="APP_DIR=$app_dir bash fabro/workflows/generic-build/scripts/install-deps.sh 2>&1"
+    ]
+    gate_deps [shape=diamond, label="Deps OK?"]
+
+    verify_lint [
+        shape=parallelogram,
+        label="Lint",
+        script="APP_DIR=$app_dir bash fabro/workflows/generic-build/scripts/lint.sh 2>&1"
+    ]
+    gate_lint [shape=diamond, label="Lint OK?"]
+
+    fix_lints [
+        label="Fix Lints",
+        prompt="The lint check failed. Read the lint output from context and fix all issues in $app_dir/.",
+        max_visits=3
+    ]
+
+    verify_build [
+        shape=parallelogram,
+        label="Build",
+        goal_gate=true,
+        script="APP_DIR=$app_dir bash fabro/workflows/generic-build/scripts/build.sh 2>&1"
+    ]
+    gate_build [shape=diamond, label="Build OK?"]
+
+    // =========================================================================
+    // Edges
+    // =========================================================================
+
+    start -> plan
+    plan -> implement
+
+    implement -> verify_deps
+    verify_deps -> gate_deps
+    gate_deps -> verify_lint [condition="outcome=success"]
+    gate_deps -> implement
+
+    verify_lint -> gate_lint
+    gate_lint -> verify_build [condition="outcome=success"]
+    gate_lint -> fix_lints
+    fix_lints -> verify_lint
+
+    verify_build -> gate_build
+    gate_build -> exit [condition="outcome=success"]
+    gate_build -> implement
+}
