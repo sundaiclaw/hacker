@@ -99,7 +99,7 @@ During execution, emit concise live status updates after each major phase using 
    - Clone the repo, then set up the Fabro build inside it:
      1. Write a spec file at `spec/spec.md` describing: project name, what it does, tech stack, AI integration requirements, demo flow.
      2. Copy the `fabro/` directory and `fabro.toml` from this workspace into the new repo.
-     3. Run: `fabro run sundai-ship --auto-approve --non-interactive`
+     3. Run: `fabro run sundai-ship --auto-approve --no-retro`
      4. This executes the plan → implement → verify (deps, lint, build) pipeline automatically.
    - If `fabro` is not available or fails, fall back to building the MVP manually (scaffold code directly).
    - **Mandatory:** each project must use AI in-product via OpenRouter **free** models.

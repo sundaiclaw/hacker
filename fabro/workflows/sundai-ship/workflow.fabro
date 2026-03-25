@@ -8,8 +8,8 @@ All code goes in $app_dir/. After building, verify it runs.",
         retry_target="implement",
         fallback_retry_target="implement",
         model_stylesheet="
-            *          { model: openai/gpt-5.4;  }
-            .cheap     { model: openai/gpt-5.4;  }
+            *          { model: gpt-5.4;  }
+            .cheap     { model: gpt-5.4;  }
         "
     ]
 
