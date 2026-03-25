@@ -6,7 +6,7 @@ if [[ "${EUID}" -ne 0 ]]; then
   exit 1
 fi
 
-USERNAME="${OPENCLAW_USER:-vyahhi}"
+USERNAME="${OPENCLAW_USER:-openclaw}"
 HOME_DIR="/home/${USERNAME}"
 OPENCLAW_HOME="${HOME_DIR}/.openclaw"
 

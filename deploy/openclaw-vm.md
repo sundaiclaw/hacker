@@ -20,27 +20,27 @@ This repo mirrors the VM-hosted OpenClaw deployment used for Sundai shipping. Th
 
 ## VM layout
 
-- app home: `/home/vyahhi/.openclaw`
-- private env: `/home/vyahhi/.openclaw/.env`
-- pre-start sync script: `/home/vyahhi/.openclaw/bin/sync-hacker-skill.sh`
-- runtime config: `/home/vyahhi/.openclaw/openclaw.json`
-- workspace repo: `/home/vyahhi/.openclaw/workspace`
-- active skill path: `/home/vyahhi/.openclaw/workspace/skills/sundai-project-pipeline`
+- app home: `/home/openclaw/.openclaw`
+- private env: `/home/openclaw/.openclaw/.env`
+- pre-start sync script: `/home/openclaw/.openclaw/bin/sync-hacker-skill.sh`
+- runtime config: `/home/openclaw/.openclaw/openclaw.json`
+- workspace repo: `/home/openclaw/.openclaw/workspace`
+- active skill path: `/home/openclaw/.openclaw/workspace/skills/sundai-project-pipeline`
 
 ## Required setup
 
 1. Provision a VM with outbound internet access.
 2. Run `sudo bash deploy/bootstrap-openclaw-vm.sh`.
-3. Copy `.env.example` to `/home/vyahhi/.openclaw/.env` and fill in real secrets.
-4. Copy `deploy/openclaw.json.example` to `/home/vyahhi/.openclaw/openclaw.json` and replace placeholders.
-5. Clone this repo to `/home/vyahhi/.openclaw/workspace`.
-6. Ensure `/home/vyahhi/.openclaw/workspace` tracks `https://github.com/sundaiclaw/hacker.git`.
+3. Copy `.env.example` to `/home/openclaw/.openclaw/.env` and fill in real secrets.
+4. Copy `deploy/openclaw.json.example` to `/home/openclaw/.openclaw/openclaw.json` and replace placeholders.
+5. Clone this repo to `/home/openclaw/.openclaw/workspace`.
+6. Ensure `/home/openclaw/.openclaw/workspace` tracks `https://github.com/sundaiclaw/hacker.git`.
 7. Start the service with `sudo systemctl start openclaw`.
 
 ## Startup behavior
 
-- `openclaw.service` runs `ExecStartPre=/home/vyahhi/.openclaw/bin/sync-hacker-skill.sh`
-- the checked-in unit also loads private vars from `/home/vyahhi/.openclaw/.env`
+- `openclaw.service` runs `ExecStartPre=/home/openclaw/.openclaw/bin/sync-hacker-skill.sh`
+- the checked-in unit also loads private vars from `/home/openclaw/.openclaw/.env`
 - that pre-start script:
   - fetches `origin/main`
   - hard-resets the workspace repo to `origin/main`
@@ -74,10 +74,10 @@ This repo mirrors the VM-hosted OpenClaw deployment used for Sundai shipping. Th
 
 ## Notes
 
-- Keep `/home/vyahhi/.openclaw/.env` out of git.
-- For reliable Sundai API-first runs, keep `SUNDAI_CLERK_CLIENT` and `SUNDAI_SESSION_ID` current in `/home/vyahhi/.openclaw/.env`. The pipeline uses `deploy/refresh-sundai-auth.sh` to mint fresh 60s session JWTs on demand, with automatic GitHub OAuth re-auth fallback.
+- Keep `/home/openclaw/.openclaw/.env` out of git.
+- For reliable Sundai API-first runs, keep `SUNDAI_CLERK_CLIENT` and `SUNDAI_SESSION_ID` current in `/home/openclaw/.openclaw/.env`. The pipeline uses `deploy/refresh-sundai-auth.sh` to mint fresh 60s session JWTs on demand, with automatic GitHub OAuth re-auth fallback.
 - Keep the VM `gcloud` default project set to the project ID `project-3930b9ab-6eae-4b3a-959`, not the numeric project number.
 - Even with the default fixed, deployment commands should still pass explicit `--project "$GCP_PROJECT_ID"` and `--region "$GCP_REGION"`.
 - The live VM currently uses Telegram `streaming: "block"`.
 - The live VM currently uses `openai/gpt-5.4` via `openai-completions` as the default agent model.
-- If the skill expects workspace-relative files like `.env.sundai` or `references/checklist.md`, the pre-start sync script re-links them into `/home/vyahhi/.openclaw/workspace`.
+- If the skill expects workspace-relative files like `.env.sundai` or `references/checklist.md`, the pre-start sync script re-links them into `/home/openclaw/.openclaw/workspace`.
