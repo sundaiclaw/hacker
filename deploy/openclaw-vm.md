@@ -72,6 +72,12 @@ This repo mirrors the VM-hosted OpenClaw deployment used for Sundai shipping. Th
 - Cloud Run create/delete works in `project-3930b9ab-6eae-4b3a-959`
 - Cloud Run deploy does not work in `clipmind-project-47895` for the VM service account without extra IAM
 
+## Build tools
+
+- `fabro` installed globally via `npm install -g fabro`
+- Used by `sundai-project-pipeline` step 2 to run `fabro run sundai-ship --auto-approve --non-interactive`
+- Workflow definition: `fabro/workflows/sundai-ship/workflow.fabro`
+
 ## Notes
 
 - Keep `/home/openclaw/.openclaw/.env` out of git.

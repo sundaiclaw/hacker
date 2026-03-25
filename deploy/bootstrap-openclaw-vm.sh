@@ -30,7 +30,7 @@ echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/githubc
 
 apt-get update
 apt-get install -y gh google-chrome-stable
-npm install -g openclaw
+npm install -g openclaw fabro
 
 id -u "${USERNAME}" >/dev/null 2>&1 || useradd --create-home --shell /bin/bash "${USERNAME}"
 
