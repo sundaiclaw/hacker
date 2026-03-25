@@ -2,7 +2,7 @@
 
 # Sundai Hacker
 
-Autonomous Sundai Club hacker, powered by [OpenClaw](https://github.com/open-claw/openclaw).
+Autonomous Sundai Club hacker, powered by [OpenClaw](https://github.com/openclaw/openclaw).
 
 ## What's inside
 
