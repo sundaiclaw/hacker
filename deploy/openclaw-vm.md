@@ -29,13 +29,34 @@ This repo mirrors the VM-hosted OpenClaw deployment used for Sundai shipping. Th
 
 ## Required setup
 
-1. Provision a VM with outbound internet access.
-2. Run `sudo bash deploy/bootstrap-openclaw-vm.sh`.
+1. Create the VM:
+   ```bash
+   gcloud compute instances create openclaw-vm \
+     --project project-3930b9ab-6eae-4b3a-959 \
+     --zone us-central1-a \
+     --machine-type e2-standard-2 \
+     --image-family debian-13 \
+     --image-project debian-cloud \
+     --boot-disk-size 30GB \
+     --scopes cloud-platform
+   ```
+2. Copy and run the bootstrap script (requires `GH_TOKEN` for fabro install):
+   ```bash
+   gcloud compute scp deploy/bootstrap-openclaw-vm.sh openclaw-vm:/tmp/
+   gcloud compute ssh openclaw-vm --command "export GH_TOKEN=<github-token> && sudo -E bash /tmp/bootstrap-openclaw-vm.sh"
+   ```
 3. Copy `.env.example` to `/home/openclaw/.openclaw/.env` and fill in real secrets.
 4. Copy `deploy/openclaw.json.example` to `/home/openclaw/.openclaw/openclaw.json` and replace placeholders.
-5. Clone this repo to `/home/openclaw/.openclaw/workspace`.
-6. Ensure `/home/openclaw/.openclaw/workspace` tracks `https://github.com/sundaiclaw/hacker.git`.
-7. Start the service with `sudo systemctl start openclaw`.
+5. Clone this repo to `/home/openclaw/.openclaw/workspace`:
+   ```bash
+   sudo -u openclaw bash -c 'GH_TOKEN=<token> gh auth login --with-token <<< "$GH_TOKEN"'
+   sudo -u openclaw git clone https://github.com/sundaiclaw/hacker.git /home/openclaw/.openclaw/workspace
+   ```
+6. Set up fabro secrets:
+   ```bash
+   sudo -u openclaw fabro secret set OPENAI_API_KEY <key>
+   ```
+7. Start the service: `sudo systemctl start openclaw`.
 
 ## Startup behavior
 
@@ -61,6 +82,7 @@ This repo mirrors the VM-hosted OpenClaw deployment used for Sundai shipping. Th
 - `SUNDAI_PASSWORD`
 - `SUNDAI_CLERK_CLIENT` (long-lived Clerk `__client` JWT, ~10yr)
 - `SUNDAI_SESSION_ID` (active Clerk session ID, `sess_*`)
+- `EXA_API_KEY` (Exa web search, auto-detected by openclaw)
 
 ## Active identities
 
@@ -78,7 +100,8 @@ This repo mirrors the VM-hosted OpenClaw deployment used for Sundai shipping. Th
 - Installed via `curl -fsSL https://fabro.sh/install.sh | bash`, then copied to `/usr/local/bin/fabro`
 - Requires `GH_TOKEN` in environment during install (uses `gh release download`)
 - VM OS must have glibc >= 2.38 (Debian 13+ or Ubuntu 24.04+)
-- Used by `sundai-project-pipeline` step 2 to run `fabro run sundai-ship --auto-approve --non-interactive`
+- Used by `sundai-project-pipeline` step 2 to run `fabro run sundai-ship --auto-approve --no-retro`
+- Fabro needs its own OpenAI key: `sudo -u openclaw fabro secret set OPENAI_API_KEY <key>`
 - Workflow definition: `fabro/workflows/sundai-ship/workflow.fabro`
 
 ## Notes
