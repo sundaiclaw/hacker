@@ -77,6 +77,18 @@ cd ../apps/$NAME
 # Initialize git repo
 git init
 
+# Inspect the detected stack and directory layout before generating artifacts.
+# Identify files/directories that are generated locally, environment-specific, secret-bearing,
+# cache-like, or otherwise inappropriate to commit, then add only those patterns to .gitignore.
+# Prefer the stack's standard ignore patterns over a broad catch-all template.
+# Examples:
+# - Node / frontend: node_modules/, dist/, build/, .next/, coverage/, *.tsbuildinfo
+# - Python: __pycache__/, .venv/, venv/, dist/, build/, *.egg-info/, .pytest_cache/
+# - Nested apps: frontend/node_modules/, frontend/dist/, backend/.venv/
+# - General: .env, .env.*, *.log, .DS_Store, .vscode/
+# Re-check after Fabro runs; if the build creates new generated artifacts that should not be
+# versioned, update .gitignore before committing.
+
 # Initialize openspec in the app
 openspec init --tools claude --force
 
