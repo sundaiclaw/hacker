@@ -70,29 +70,98 @@ During execution, emit concise live status updates after each major phase using 
 ## Workflow (always in order)
 
 1. **Research-informed ideation (mandatory)**
-   - Before choosing an idea, analyze the latest 100 approved Sundai projects from:
-     - `https://www.sundai.club/api/projects?status=APPROVED`
-   - From those, identify 5-10 top-liked projects for inspiration.
-   - Compare project themes and observed engagement (`likes` count/length) to avoid weak or repetitive ideas.
-   - Add **fresh external signal scan** (web/news) before final idea choice when available:
-     - Use web search to pull recent agentic AI trends, launches, failures, and hot debates.
-     - Prefer very recent signals (last days/weeks) and concrete shifts (new tools, policy changes, workflows, pain points).
-     - If web search is unavailable, rate-limited, or credit-blocked, do not stop the run.
-     - In that case, report the blocker in-progress, continue with Sundai approved-project analysis only, and choose an idea without the external scan.
-   - Generate 3 candidate ideas, score each with this rubric (1-5 each), then choose highest total:
-     - novelty/differentiation vs recent your+others projects
-     - urgency of pain point
-     - demo wow factor
-     - feasibility in one run
-     - likely engagement (likes/comments)
-   - Pick 1 that is:
-     - clearly differentiated from your and others recent Sundai projects
-     - demoable in minutes
-     - **creative/radical** AI product idea (not generic "chatbot" or wrapper)
-     - can include broader categories: AI coding agents, AI devtools, AI workflow copilots, AI evaluation/safety tools, consumer AI utilities
-     - tied to a real current pain point from the external scan
-   - If user already gave a fixed idea, keep it; otherwise pick the best idea from this step.
-   - Keep project title <= 32 chars and brief description <= 100 chars.
+
+   Execute 5 phases in sequence. Phases 2–5 are pure reasoning (no tool calls).
+
+   **Phase 1 — DISCOVER: Real-world signal scan**
+
+   The sole purpose is to gather raw material about **real problems people have right now**.
+
+   - **Primary research (web search — this drives ideation):**
+     - Conduct 2–3 targeted web searches to surface:
+       - Acute pain points and workflow breakdowns across domains (dev tools, productivity, creative work, education, business ops, personal life)
+       - Recent AI product launches, failures, and community frustrations from the last 7–14 days — what's generating heat, what's disappointing users, what gaps people are vocal about
+       - Manual or tedious processes ripe for AI-native reinvention — expensive services that could be democratized, expert tasks that could be made accessible
+     - If web search is unavailable or rate-limited, do not block the run. Fall back to reasoning from training knowledge about real-world pain points and market gaps. Report the blocker in progress output and continue.
+   - **Deduplication fetch (API — not for inspiration):**
+     - Fetch latest 100 approved Sundai projects from `https://www.sundai.club/api/projects?status=APPROVED`
+     - Extract titles and one-line descriptions into a **dedup list** used only in Phase 3 to filter out overlapping ideas
+     - Do not analyze these projects for engagement patterns, themes, or inspiration
+   - **Phase 1 output — "Signal Brief":**
+     - 5–10 specific real-world pain points with context (who suffers, what breaks, why current solutions fail)
+     - 3–5 market shifts or emerging opportunities creating new solution space
+     - Sundai dedup list (titles + descriptions, for later filtering only)
+
+   **Phase 2 — DEFINE: Problem space framing**
+
+   Before generating any solutions, define problems worth solving.
+
+   1. From the signal brief, select **5 high-potential problem spaces** where pain is acute, timing is right, and AI can provide a step-change improvement.
+   2. For each, write a **"How Might We" statement**: "How might we help [specific person] who [concrete situation/pain] to [desired outcome]?"
+   3. For each, write a **Job-to-Be-Done statement**: "When [situation], I want to [motivation], so I can [outcome]."
+   4. For each, articulate the **current alternative and its gap**: "Today they [workaround/existing tool], but it [specific limitation — slow, expensive, requires expertise, error-prone, etc.]."
+   5. Apply a **feasibility gate**: Can this problem be meaningfully addressed with a demoable AI-powered MVP built in a single autonomous run using free models? Discard any that cannot.
+   - **Phase 2 output:** 3–5 validated problem frames, each with HMW + JTBD + current alternative + gap + feasibility confirmation.
+
+   **Phase 3 — DEVELOP: Divergent idea generation**
+
+   Generate a broad set of solution concepts using multiple creative lenses, then cull aggressively.
+
+   - **Divergent pass — generate 6–15 raw concepts:**
+     - For each of the 3–5 problem frames, generate 2–3 solution concepts. Each concept must come from a **different creative lens** (do not reuse the same lens consecutively):
+       - **Analogical transfer:** What solves a structurally similar problem in a completely different domain? Transpose that pattern into an AI-native solution.
+       - **10x lens:** What would a solution look like if it were 10x better than the current alternative, not 10% better? What would have to change fundamentally?
+       - **First principles decomposition:** Strip the problem to irreducible atoms. What is the minimum thing that must happen for the user to get value? Build up AI-native from the ground up.
+       - **Constraint-based invention:** Force an unusual constraint ("must deliver value in under 10 seconds," "no text input," "combine two unrelated AI capabilities," "works with a single API call") and let it drive novel design.
+   - **Convergent pass — cull to 5 candidates** via hard gates:
+     - Not buildable as a demoable MVP in one autonomous run → cut
+     - Too similar to an existing Sundai project on the dedup list → cut
+     - AI is not the core value driver (could work equally well without AI) → cut
+     - Is a generic chatbot, wrapper, or "ask AI about X" pattern with no distinctive interaction model → cut
+     - Cannot be understood from a title and one sentence → cut
+   - **Phase 3 output:** 5 candidate concepts, each with: working title (≤32 chars), one-line description (≤100 chars), which problem frame it addresses, which creative lens generated it, why AI is essential.
+
+   **Phase 4 — DELIVER: Scoring and stress-testing**
+
+   - **Pass 1 — Rubric scoring** (1–5 each, max 35):
+     - **Real-world urgency:** How acute is the underlying pain? Are people actively seeking solutions?
+     - **Novelty:** Is this genuinely new — not a rehash of common AI demo patterns (chatbot, summarizer, image generator)?
+     - **Demo wow factor:** Would someone say "whoa" within 2 minutes of trying it?
+     - **Feasibility:** Can this be built, deployed, and demoed in one autonomous run with free AI models?
+     - **Value clarity:** Can someone immediately understand the benefit from the title and a 10-second interaction? Feature → capability → benefit → outcome must be self-evident.
+     - **Job fit:** Does this clearly accomplish a job someone is actively trying to do? Would a real person switch from their current approach?
+     - **Shareability:** Would someone show this to a friend or post about it? Is there a natural "you have to see this" moment?
+   - **Pass 2 — Pre-mortem on top 2 candidates:**
+     1. "Imagine nobody tries the demo and it gets zero engagement. What went wrong?" — 3 specific failure reasons each.
+     2. "What is the single riskiest assumption this idea depends on?" — one sentence.
+     3. "Can the MVP design itself mitigate that risk?" — yes/no with a concrete mechanism.
+   - **Selection:** Pick the candidate that scores highest AND survives pre-mortem without a fatal, un-mitigable flaw. If top scorer has a fatal flaw, take the runner-up. If both finalists have fatal flaws, return to Phase 3 pool.
+   - Selected idea must meet all of: clearly differentiated from common AI demo patterns; demoable in minutes by a first-time user; creative and ambitious; rooted in a real pain point surfaced during research; AI is essential and central.
+   - **Override:** If user already gave a fixed idea, skip Phases 1–4 and proceed directly to Phase 5.
+
+   **Phase 5 — PACKAGE: Structured handoff to Step 2**
+
+   Format the selected idea for direct consumption by Step 2 when writing `spec/spec.md`:
+
+   ```
+   IDEATION OUTPUT
+   Title: [≤32 chars]
+   Description: [≤100 chars]
+
+   Spec Seed:
+   - What it does: [2–3 sentences]
+   - Who it's for: [specific target user and their situation]
+   - Core job: [JTBD one-liner from Phase 2]
+   - Current alternative: [what people do today and why it falls short]
+   - Key differentiator: [the single thing that makes this unlike anything else]
+   - AI integration: [how AI is core to the product's value — which capability, how surfaced to user]
+   - Demo flow: [3–5 step user journey for the smoke test in Step 11]
+   - Tech stack suggestion: [frontend + backend + AI provider/model]
+   - Riskiest assumption: [from pre-mortem — what could kill this + how MVP mitigates it]
+   Engagement hook: [one sentence — why someone would click and try the demo]
+   ```
+
+   - Title ≤32 chars and description ≤100 chars are hard limits enforced by Sundai.
 
 2. **Build MVP via Fabro workflow + create NEW GitHub repo + push**
    - Create a **new public GitHub repo** first (no reusing old project repos).
