@@ -6,6 +6,13 @@
 - Updated step 2 to require a GitHub repo → OpenSpec artifacts → `spec/spec.md` bridge → Fabro build sequence.
 - Added fallback guidance: if OpenSpec tooling fails, report the blocker and continue with the prior Fabro/manual path so the run can still ship.
 - Added an explicit cross-reference to `openspec-workflow` for artifact quality and shape.
+- Rewrote Step 1 ideation as a 5-phase structured process (Discover, Define, Develop, Deliver, Package).
+- Shifted primary research from Sundai project analysis to real-world signal scanning via web search. Sundai project fetch retained for deduplication only.
+- Added problem framing phase: How Might We statements, Job-to-Be-Done statements, current alternative + gap analysis, feasibility gating.
+- Added multi-lens divergent generation: analogical transfer, 10x lens, first principles decomposition, constraint-based invention. Generates 6–15 concepts, culls to 5.
+- Expanded scoring rubric from 5 to 7 criteria (added value clarity, job fit, shareability).
+- Added adversarial pre-mortem + riskiest assumption test on top 2 finalists before selection.
+- Added structured spec seed output (JTBD, differentiator, demo flow, tech stack, risk mitigation) as handoff to Step 2.
 
 ## v1.21.1 - 2026-03-24 22:32 UTC
 - Confirmed the self-like API path in live production: `POST /api/projects/{projectId}/like`.

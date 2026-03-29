@@ -2,10 +2,16 @@
 
 ## Required checks before publish
 - [ ] Progress updates sent at each major phase (numbered checkpoints)
-- [ ] Reviewed latest 100 approved projects from `/api/projects?status=APPROVED`
-- [ ] Picked 5-10 top-liked projects for inspiration
-- [ ] Generated 3 candidate ideas and scored with rubric (novelty, urgency, demo wow, feasibility, likely engagement)
-- [ ] Chosen idea is clearly differentiated from your + others recent Sundai projects
+- [ ] Ran real-world signal scan via web search (pain points, market shifts, unmet needs)
+- [ ] If web search unavailable, reported blocker and continued with training knowledge
+- [ ] Fetched Sundai project catalog for deduplication only (not as inspiration)
+- [ ] Framed 3–5 problem spaces with HMW + JTBD + current alternative before generating solutions
+- [ ] Generated 6–15 concepts using multiple creative lenses (analogical, 10x, first principles, constraint-based)
+- [ ] Culled to 5 candidates via hard gates (feasibility, dedup, AI-core, not generic, clarity)
+- [ ] Scored 5 candidates on 7-criteria rubric (urgency, novelty, wow, feasibility, value clarity, job fit, shareability)
+- [ ] Ran compressed pre-mortem on top 2 (failure modes, riskiest assumption, mitigation)
+- [ ] Selected idea meets all hard criteria (differentiated, demoable, creative, real pain point, AI-essential)
+- [ ] Produced spec seed with JTBD, differentiator, demo flow, tech stack, and risk mitigation
 - [ ] Title fits Sundai limit (<=32 chars)
 - [ ] Brief description fits Sundai limit (<=100 chars)
 - [ ] MVP includes real AI call (not mock/rules-only)
