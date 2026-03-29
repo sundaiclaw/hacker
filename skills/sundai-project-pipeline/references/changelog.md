@@ -1,5 +1,12 @@
 # sundai-project-pipeline changelog
 
+## v1.22.0 - 2026-03-29 20:55 UTC
+- Incorporated the OpenSpec workflow into the Sundai pipeline.
+- Sundai project runs are now OpenSpec-first by default: create/update proposal, design, specs, and tasks before implementation.
+- Updated step 2 to require a GitHub repo → OpenSpec artifacts → `spec/spec.md` bridge → Fabro build sequence.
+- Added fallback guidance: if OpenSpec tooling fails, report the blocker and continue with the prior Fabro/manual path so the run can still ship.
+- Added an explicit cross-reference to `openspec-workflow` for artifact quality and shape.
+
 ## v1.21.1 - 2026-03-24 22:32 UTC
 - Confirmed the self-like API path in live production: `POST /api/projects/{projectId}/like`.
 - Added verification guidance to treat a populated `likes[]` readback as sufficient like-state proof.

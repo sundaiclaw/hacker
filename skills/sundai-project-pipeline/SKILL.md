@@ -1,12 +1,26 @@
 ---
 name: sundai-project-pipeline
-description: End-to-end Sundai Club project shipping workflow from idea to code to GitHub to Sundai create-edit to team and thumbnail setup to publish and repo About sync. Use when asked to create, update, submit, publish, or fully ship a Sundai project.
+description: End-to-end Sundai Club project shipping workflow from idea to OpenSpec artifacts to Fabro-built code to GitHub to Sundai create-edit to team and thumbnail setup to publish and repo About sync. Use when asked to create, update, submit, publish, or fully ship a Sundai project.
 ---
 
 # Sundai Project Pipeline
 
 ## Overview
 Execute a complete Sundai shipping run with no skipped steps. Default to this pipeline for any Sundai project request unless the user explicitly asks for a partial action.
+
+## OpenSpec + Fabro rule (mandatory)
+- Sundai builds are now **spec-driven by default**.
+- Before implementation, create OpenSpec artifacts for the project idea and use them to drive the build.
+- Required sequence for new Sundai projects:
+  1. ideate and choose the project
+  2. create the GitHub repo
+  3. initialize or copy OpenSpec into the repo
+  4. create an OpenSpec change using the project slug/name
+  5. write the core artifacts: `proposal.md`, `design.md`, `specs/.../spec.md`, `tasks.md`
+  6. summarize the implementation target into `spec/spec.md` for Fabro
+  7. run Fabro to implement from those specs
+- Do **not** skip OpenSpec just because the project is small. The Sundai pipeline should leave behind reusable product/spec artifacts as well as code.
+- If OpenSpec tooling fails or the repo cannot be initialized cleanly, report the blocker, then fall back to the previous direct-Fabro/manual path so the shipping run can still complete.
 
 ## Execution model (mandatory — read first)
 - This pipeline must run to completion in a single autonomous turn.
@@ -94,14 +108,31 @@ During execution, emit concise live status updates after each major phase using 
    - If user already gave a fixed idea, keep it; otherwise pick the best idea from this step.
    - Keep project title <= 32 chars and brief description <= 100 chars.
 
-2. **Build MVP via Fabro workflow + create NEW GitHub repo + push**
-   - Create a **new public GitHub repo** first (no reusing old project repos).
-   - Clone the repo, then set up the Fabro build inside it:
-     1. Write a spec file at `spec/spec.md` describing: project name, what it does, tech stack, AI integration requirements, demo flow.
+2. **Create NEW GitHub repo + generate OpenSpec artifacts + build MVP via Fabro**
+   - Create a **new public GitHub repo** for the project (no reusing old project repos), but do **not** try to `gh repo create --push` from a truly empty repo.
+   - First create a minimal scaffold locally (for example: `README.md` and `.gitignore`), make an initial commit, and only then create/push the repo.
+   - Recommended sequence:
+     1. Initialize the local repo and write a minimal `README.md` + `.gitignore`.
+     2. Commit the initial scaffold locally.
+     3. Create the GitHub repo and push that initial commit.
+     4. Then continue building inside the repo.
+   - After the repo exists, make the run **OpenSpec-first**:
+     1. Initialize OpenSpec in the repo if needed.
+     2. Create a change whose kebab-case name matches the project slug/title.
+     3. Generate the four core artifacts: `proposal.md`, `design.md`, `specs/.../spec.md`, and `tasks.md`.
+     4. Keep them concise but real; they should capture product intent, scope, decisions, requirements, and implementation tasks.
+     5. If the repo already contains OpenSpec artifacts, update them instead of duplicating them.
+   - Then hand the implementation to Fabro:
+     1. Write a bridge file at `spec/spec.md` summarizing: project name, what it does, tech stack, AI integration requirements, demo flow, and the OpenSpec change name.
      2. Copy the `fabro/` directory and `fabro.toml` from this workspace into the new repo.
      3. Run: `fabro run sundai-ship --auto-approve --no-retro`
      4. This executes the plan → implement → verify (deps, lint, build) pipeline automatically.
-   - If `fabro` is not available or fails, fall back to building the MVP manually (scaffold code directly).
+   - Preferred implementation pattern:
+     - OpenSpec defines the product and requirements.
+     - `spec/spec.md` gives Fabro a compact execution brief.
+     - Fabro implements the MVP from those specs.
+   - If OpenSpec setup fails, report that exact blocker and continue with the previous direct `spec/spec.md` + Fabro/manual path so the project still ships.
+   - If `fabro` is not available or fails, fall back to building the MVP manually (scaffold code directly), but still keep the OpenSpec artifacts in the repo.
    - **Mandatory:** each project must use AI in-product via OpenRouter **free** models.
    - Use this provider config (from environment variables, never hardcode secrets):
      - `OPENROUTER_BASE_URL=https://openrouter.ai/api/v1`
@@ -270,3 +301,4 @@ Interpret as: run the full workflow above, including team member, post-save veri
 - Use `references/checklist.md` as a run checklist and copy-safe description template.
 - Use `references/ai-endpoint.md` for OpenRouter integration snippet/pattern.
 - Use `references/sundai-api-mode.md` for API-first request patterns and fallback rules.
+- Borrow OpenSpec artifact quality/shape from `../openspec-workflow/SKILL.md` when drafting proposal/design/specs/tasks for a Sundai repo.
