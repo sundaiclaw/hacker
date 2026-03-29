@@ -109,7 +109,20 @@ During execution, emit concise live status updates after each major phase using 
    - Keep project title <= 32 chars and brief description <= 100 chars.
 
 2. **Create NEW GitHub repo + generate OpenSpec artifacts + build MVP via Fabro**
-   - Create a **new public GitHub repo** for the project (no reusing old project repos), but do **not** try to `gh repo create --push` from a truly empty repo.
+
+  - Create a **new public GitHub repo** for the project (no reusing old project repos), but do **not** try to `gh repo create --push` from a truly empty repo.
+  - # Create the app directory (name matches the OpenSpec change)
+
+  ```bash
+    NAME="<name>"
+    APP_DIR=/home/openclaw/.openclaw/sundai-apps/$NAME
+    mkdir -p $APP_DIR
+    cd $APP_DIR
+
+  # Initialize git repo
+    git init
+```
+    
    - First create a minimal scaffold locally (for example: `README.md` and `.gitignore`), make an initial commit, and only then create/push the repo.
    - Recommended sequence:
      1. Initialize the local repo and write a minimal `README.md` + `.gitignore`.
@@ -117,30 +130,13 @@ During execution, emit concise live status updates after each major phase using 
      3. Create the GitHub repo and push that initial commit.
      4. Then continue building inside the repo.
    - After the repo exists, make the run **OpenSpec-first**:
-     1. Initialize OpenSpec in the repo if needed.
-     2. Create a change whose kebab-case name matches the project slug/title.
-     3. Generate the four core artifacts: `proposal.md`, `design.md`, `specs/.../spec.md`, and `tasks.md`.
-     4. Keep them concise but real; they should capture product intent, scope, decisions, requirements, and implementation tasks.
-     5. If the repo already contains OpenSpec artifacts, update them instead of duplicating them.
-   - Then hand the implementation to Fabro:
-     1. Write a bridge file at `spec/spec.md` summarizing: project name, what it does, tech stack, AI integration requirements, demo flow, and the OpenSpec change name.
-     2. Copy the `fabro/` directory and `fabro.toml` from this workspace into the new repo.
-     3. Run: `fabro run sundai-ship --auto-approve --no-retro`
-     4. This executes the plan → implement → verify (deps, lint, build) pipeline automatically.
+     1. Call the openspec-workflow skill passing in the name of the app as <name>
+    2. If the repo already contains OpenSpec artifacts, update them instead of duplicating them.
    - Preferred implementation pattern:
      - OpenSpec defines the product and requirements.
      - `spec/spec.md` gives Fabro a compact execution brief.
      - Fabro implements the MVP from those specs.
    - If OpenSpec setup fails, report that exact blocker and continue with the previous direct `spec/spec.md` + Fabro/manual path so the project still ships.
-   - If `fabro` is not available or fails, fall back to building the MVP manually (scaffold code directly), but still keep the OpenSpec artifacts in the repo.
-   - **Mandatory:** each project must use AI in-product via OpenRouter **free** models.
-   - Use this provider config (from environment variables, never hardcode secrets):
-     - `OPENROUTER_BASE_URL=https://openrouter.ai/api/v1`
-     - `OPENROUTER_MODEL=<free model from openrouter/free>`
-     - `OPENROUTER_API_KEY=<secret>`
-   - Implement at least one real LLM call in the app flow (not mock/rules-only).
-   - AI must be **user-facing and core to value** (not hidden test endpoint only).
-   - Render AI responses in a human-friendly UI format (markdown/rendered text), not raw/plain unformatted dumps.
    - Reject ideas that can be delivered equivalently without AI.
    - Push code and verify repo URL resolves publicly.
    - Capture repo URL for Sundai `GitHub URL` field.
