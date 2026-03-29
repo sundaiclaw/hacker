@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-REPO=/home/vyahhi/.openclaw/workspace
+REPO=/home/openclaw/.openclaw/workspace
 TARGET=$REPO/skills/sundai-project-pipeline
 ENV_LINK=$REPO/.env.sundai
-ENV_TARGET=/home/vyahhi/.openclaw/.env
+ENV_TARGET=/home/openclaw/.openclaw/.env
 REFS_SRC=$TARGET/references
 REFS_LINK=$REPO/references
 

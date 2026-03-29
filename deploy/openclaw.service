@@ -5,12 +5,12 @@ Wants=network-online.target
 
 [Service]
 Type=simple
-User=vyahhi
-WorkingDirectory=/home/vyahhi
-Environment=HOME=/home/vyahhi
+User=openclaw
+WorkingDirectory=/home/openclaw
+Environment=HOME=/home/openclaw
 Environment=PATH=/usr/bin:/usr/local/bin:/bin
-EnvironmentFile=/home/vyahhi/.openclaw/.env
-ExecStartPre=/home/vyahhi/.openclaw/bin/sync-hacker-skill.sh
+EnvironmentFile=/home/openclaw/.openclaw/.env
+ExecStartPre=/home/openclaw/.openclaw/bin/sync-hacker-skill.sh
 ExecStart=/usr/bin/openclaw gateway run --allow-unconfigured --bind loopback --port 18789 --auth token --token ${OPENCLAW_GATEWAY_TOKEN}
 Restart=always
 RestartSec=5
