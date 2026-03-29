@@ -3,7 +3,7 @@
 # Sundai Hacker
 
 Autonomous Sundai Club hacker, powered by [OpenClaw](https://github.com/openclaw/openclaw).
-
+Deep Wiki https://deepwiki.com/sundaiclaw/hacker
 ## What's inside
 
 - `skills/sundai-project-pipeline/` — 15-step autonomous pipeline: idea → build → deploy → publish
