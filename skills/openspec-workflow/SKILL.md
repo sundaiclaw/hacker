@@ -40,10 +40,10 @@ Ship spec-driven apps with OpenSpec for specification and Fabro for implementati
 
 ## Convention: App Directory Structure
 
-Each app lives in its own directory under `sundai-apps/` and shares its name with the OpenSpec change:
+Each app lives in its own directory under `apps/` and shares its name with the OpenSpec change:
 
 ```
-sundai-apps/
+apps/
 └── <name>/              # Same name as openspec/changes/<name>
     ├── openspec/        # App's own openspec (copied from parent or initialized)
     ├── fabro/           # App's own fabro workflow
@@ -68,37 +68,39 @@ The `<name>` is always kebab-case and must match between `openspec/changes/<name
 
 ### Step 0: Set up the app directory and GitHub repo
 
-Inspect the detected stack and directory layout before generating artifacts.
-Identify files/directories that are generated locally, environment-specific, secret-bearing,
-cache-like, or otherwise inappropriate to commit, then add only those patterns to .gitignore.
-Prefer the stack's standard ignore patterns over a broad catch-all template.
-Examples:
-- Node / frontend: node_modules/, dist/, build/, .next/, coverage/, *.tsbuildinfo
-- Python: __pycache__/, .venv/, venv/, dist/, build/, *.egg-info/, .pytest_cache/
-- Nested apps: frontend/node_modules/, frontend/dist/, backend/.venv/
-- General: .env, .env.*, *.log, .DS_Store, .vscode/
-Re-check after Fabro runs; if the build creates new generated artifacts that should not be
-versioned, update .gitignore before committing.
-
 ```bash
+# Create the app directory (name matches the OpenSpec change)
 NAME="<name>"
-APP_DIR=/home/openclaw/.openclaw/sundai-apps/$NAME
-mkdir -p $APP_DIR
-cd $APP_DIR
+mkdir -p ../apps/$NAME
+cd ../apps/$NAME
+
+# Initialize git repo
+git init
+
+# Inspect the detected stack and directory layout before generating artifacts.
+# Identify files/directories that are generated locally, environment-specific, secret-bearing,
+# cache-like, or otherwise inappropriate to commit, then add only those patterns to .gitignore.
+# Prefer the stack's standard ignore patterns over a broad catch-all template.
+# Examples:
+# - Node / frontend: node_modules/, dist/, build/, .next/, coverage/, *.tsbuildinfo
+# - Python: __pycache__/, .venv/, venv/, dist/, build/, *.egg-info/, .pytest_cache/
+# - Nested apps: frontend/node_modules/, frontend/dist/, backend/.venv/
+# - General: .env, .env.*, *.log, .DS_Store, .vscode/
+# Re-check after Fabro runs; if the build creates new generated artifacts that should not be
+# versioned, update .gitignore before committing.
 
 # Initialize openspec in the app
-openspec init --tools codex --force
+openspec init --tools claude --force
 
 # Copy OpenSpec and Fabro skills into the skills directory
-cp -r ../../skills/fabro-create-workflow .codex/skills 2>/dev/null || true
-cp -r ../../skills/openspec-workflow .codex/skills 2>/dev/null || true
+cp -r ../../hacker/fabro-repo/skills/fabro-create-workflow .claude/skills
+cp -r ../../hacker/openclaw-skills/skills/bobbyradford/openspec-workflow .claude/skills
 
 # Copy generic-build workflow template (browser-testing is generated per-app in Step 3d)
-cp -r ./../fabro/workflows/generic-build fabro/workflows/ 2>/dev/null || true
+cp -r ../../hacker/fabro-repo/workflows/generic-build fabro/workflows/ 2>/dev/null || true
 
 # Create GitHub repo and set as remote
-# This is getting created already using sundai-project-pipeline
-#gh repo create $NAME --public --source . --push
+gh repo create $NAME --private --source . --push
 ```
 
 The GitHub repo is created immediately so that issues can be filed against it
@@ -178,14 +180,6 @@ Continue to the next artifact until all 4 are complete (proposal, design, specs,
 
 Once all OpenSpec artifacts are complete, set up the app directory and run Fabro to build it.
 
-- **Mandatory:** each project must use AI in-product via OpenRouter **free** models.
-   - Use this provider config (from environment variables, never hardcode secrets):
-     - `OPENROUTER_BASE_URL=https://openrouter.ai/api/v1`
-     - `OPENROUTER_MODEL=<free model from openrouter/free>`
-     - `OPENROUTER_API_KEY=<secret>`
-   - Implement at least one real LLM call in the app flow (not mock/rules-only).
-   - AI must be **user-facing and core to value** (not hidden test endpoint only).
-   - Render AI responses in a human-friendly UI format (markdown/rendered text), not raw/plain unformatted dumps.
 
 ```bash
 fabro init 
@@ -194,6 +188,8 @@ fabro init
 #### 3b. Set up the Fabro workflow
 
 ```bash
+# Copy the generic-build workflow into the app
+cp -r ../../fabro/workflows/generic-build fabro/workflows/generic-build
 
 # Create a run config for this app
 cat > fabro/workflows/generic-build/runs/$NAME.toml << 'EOF'
@@ -241,7 +237,7 @@ After Fabro build completes, generate and run a browser testing workflow to vali
 
 **How to generate the workflow:**
 
-1. Invoke the `fabro-create-workflow` skill (it should already be in `.codex/skills/` from Step 0)
+1. Invoke the `fabro-create-workflow` skill (it should already be in `.claude/skills/` from Step 0)
 2. Tell it to create a **browser testing** workflow (Example 10 in its references)
 3. The skill reads the OpenSpec specs and source code to understand what screens, controls, and behaviors exist
 4. It generates the workflow directly in the app's directory:
@@ -268,7 +264,7 @@ After Fabro build completes, generate and run a browser testing workflow to vali
 **Run it:**
 
 ```bash
-fabro run browser-testing
+fab run browser-testing
 ```
 
 **When to do this:**
