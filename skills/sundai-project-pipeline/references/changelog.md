@@ -1,5 +1,18 @@
 # sundai-project-pipeline changelog
 
+## v1.24.0 - 2026-03-30 21:41 UTC
+- Updated the Sundai pipeline to default to the corrected Fabro generic-build path instead of the stale `fabro run sundai-ship --auto-approve --no-retro` shorthand.
+- Added mandatory Fabro validate + preflight steps before the full run.
+- Standardized repo-local Fabro run config for Sundai builds: `app_dir="."`, `spec_dir="openspec"`, `workflow_dir=".workflow"`.
+- Documented that Sundai repos are often repo-root apps and the Fabro path must support in-place implementation instead of assuming a fresh nested app directory.
+
+## v1.23.0 - 2026-03-30 00:32 UTC
+- Corrected Sundai auth guidance: direct Clerk password sign-in is a valid recovery path; OAuth-only wording was wrong.
+- Updated pipeline auth rules to keep API-first execution but recover stale `SUNDAI_CLERK_CLIENT` / `SUNDAI_SESSION_ID` by re-signing in through Clerk with bot credentials from `.env.sundai`.
+- Tightened fallback order: retry JWT mint, then direct Clerk password re-auth, then UI/browser fallback only if both auth paths fail.
+- Updated API reference to stop assuming GitHub OAuth is the only recovery mechanism.
+
+
 ## v1.22.0 - 2026-03-29 20:55 UTC
 - Incorporated the OpenSpec workflow into the Sundai pipeline.
 - Sundai project runs are now OpenSpec-first by default: create/update proposal, design, specs, and tasks before implementation.

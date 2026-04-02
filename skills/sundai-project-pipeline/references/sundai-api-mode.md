@@ -6,30 +6,35 @@ Use API calls first for speed/reliability. Use UI only as fallback.
 - Prefer API for create/update/submit/verify.
 - After every write, do readback verification before proceeding.
 - Log which step used fallback when API fails.
-- On `401`/`Unauthorized`: run `deploy/refresh-sundai-auth.sh` to get a fresh cookie, retry, then UI fallback.
+- On `401`/`Unauthorized`: mint a fresh session JWT and retry first.
+- If the stored Clerk session/client pair is stale, refresh auth via direct Clerk password sign-in using bot credentials from `.env.sundai`, update the env values, retry the API call, then use UI only as a last resort.
 
-## Authentication (Clerk + GitHub OAuth)
-Sundai uses Clerk with **OAuth-only** sign-in (GitHub/Google/Discord). No password auth exists.
+## Authentication (Clerk direct sign-in + session tokens)
+Sundai uses Clerk. The fastest happy path is still API-first token minting from stored Clerk session state, but direct Clerk password sign-in is a working recovery path when that state goes stale.
 
-**How it works:**
-1. `SUNDAI_CLERK_CLIENT` (long-lived ~10yr `__client` JWT) + `SUNDAI_SESSION_ID` are stored in `.env.sundai`.
-2. Before each API call, mint a fresh `__session` JWT (60s lifetime) via:
+**Working auth paths:**
+1. **Primary path:** `SUNDAI_CLERK_CLIENT` (long-lived `__client`) + `SUNDAI_SESSION_ID` are stored in `.env.sundai`.
+2. Before each API call, mint a fresh `__session` JWT (short lifetime) via:
    `POST https://clerk.sundai.club/v1/client/sessions/{SUNDAI_SESSION_ID}/tokens`
    with `Cookie: __client={SUNDAI_CLERK_CLIENT}`.
 3. Use the returned JWT as `Cookie: __session={jwt}; __client_uat={unix_ts}` in API requests.
-4. If the session is expired/revoked, `deploy/refresh-sundai-auth.sh` does a full GitHub OAuth re-auth automatically.
+4. **Recovery path:** if token minting fails because the stored session is expired/revoked, perform direct Clerk password sign-in with the bot account credentials from `.env.sundai`, capture the fresh `__client` + session id, persist them back to `.env.sundai`, and resume the token-mint flow.
+5. Only if both API auth paths fail should the run fall back to browser/UI interaction.
 
 **Quick usage:**
 ```bash
-source deploy/refresh-sundai-auth.sh
-COOKIE=$(sundai_cookie_header)
-curl -H "Cookie: $COOKIE" https://www.sundai.club/api/projects?status=APPROVED
+JWT=$(curl -s -X POST "https://clerk.sundai.club/v1/client/sessions/$SUNDAI_SESSION_ID/tokens" \
+  -H "Cookie: __client=$SUNDAI_CLERK_CLIENT" \
+  -H "Origin: https://www.sundai.club" \
+  | python3 -c "import sys,json; print(json.load(sys.stdin).get('jwt',''))")
+
+curl -H "Cookie: __session=$JWT; __client_uat=$(date +%s)" \
+  https://www.sundai.club/api/projects?status=APPROVED
 ```
 
-**CLI modes:**
-- `deploy/refresh-sundai-auth.sh` — prints fresh cookie header to stdout
-- `deploy/refresh-sundai-auth.sh --update` — updates `.env.sundai` with fresh auth
-- `deploy/refresh-sundai-auth.sh --test` — verifies API access works
+**Recovery note:**
+- If `deploy/refresh-sundai-auth.sh` exists and already supports direct Clerk password refresh, use it.
+- If it does not, update/replace the refresh path to use direct Clerk password sign-in instead of assuming OAuth-only recovery.
 
 ## Core endpoints (verified against sundai-website-v2 + live run)
 - List approved: `GET /api/projects?status=APPROVED`

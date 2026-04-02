@@ -5,21 +5,21 @@ The $spec_dir/changes/ directory contains the proposal (what to build), \
 design (architecture and key decisions), and tasks (work breakdown). \
 The $spec_dir/specs/ directory contains detailed capability specs with \
 acceptance criteria. Implement everything according to these specs.\n\
-IMPORTANT: All generated code MUST be placed inside the $app_dir subdirectory \
-to keep it isolated from any existing code in the repo root. The $app_dir \
-directory is the project root for the new implementation — pyproject.toml, \
-package.json, source code, tests, and config files all go there. Do NOT \
-write files to the repo root.",
+IMPORTANT: Treat $app_dir as the application root. If $app_dir is a nested \
+subdirectory, keep all implementation inside that subtree. If $app_dir is '.' \
+or otherwise points at the existing repo root, modify the existing project in \
+place instead of trying to create a second nested app. Keep generated build \
+artifacts and workflow scratch files out of source control.",
         rankdir=LR,
         default_max_retry=3,
         retry_target="plan_fanout",
         fallback_retry_target="plan_fanout",
         model_stylesheet="
-            *          { model: claude-opus-4-6;   }
-            .code      { model: claude-sonnet-4-6; }
-            .review    { model: glm-4.7;           }
-            .cheap     { model: claude-haiku-4-5;  }
-            .plan-b    { model: glm-4.7;           }
+            *          { model: gpt-5.4;        }
+            .code      { model: gpt-5.3-codex;  }
+            .review    { model: gpt-5.4-mini;   }
+            .cheap     { model: gpt-5-mini;     }
+            .plan-b    { model: gpt-5-mini;     }
         "
     ]
 
@@ -32,6 +32,13 @@ write files to the repo root.",
     subgraph cluster_bootstrap {
         label="Bootstrap"
         start [shape=Mdiamond, label="Start"]
+
+        prepare_workdirs [
+            shape=parallelogram,
+            label="Prepare Workdirs",
+            max_retries=0,
+            script="mkdir -p '$workflow_dir' '$app_dir' 2>&1"
+        ]
 
         check_toolchain [
             shape=parallelogram,
@@ -65,10 +72,7 @@ Create a detailed implementation plan that:\n\
 3. Maps each spec to concrete files that need to be created\n\
 4. Specifies the exact commands to install dependencies, run tests, and build\n\
 5. Notes any integration points between capabilities\n\n\
-CRITICAL: All implementation must go inside the $app_dir subdirectory. \
-The $app_dir directory is the project root — pyproject.toml, package.json, \
-source code, tests, frontend/, and config all live under $app_dir. \
-Do NOT place files in the repo root.\n\n\
+CRITICAL: Treat $app_dir as the implementation root. If $app_dir points to a nested subdirectory, keep code there. If $app_dir is '.' or the existing repo root, modify the current project in place. Do NOT create a duplicate nested app unless the spec explicitly requires it.\n\n\
 The plan must be actionable — a developer should be able to follow it step by step.\n\n\
 Write to $workflow_dir/plan_a.md."
         ]
@@ -130,10 +134,8 @@ BEFORE ANYTHING ELSE: check if $workflow_dir/verify_errors.log exists. If it doe
 read it — fix every error listed, then delete $workflow_dir/verify_errors.log. \
 Do NOT regenerate working code — only fix specific errors.\n\n\
 If $workflow_dir/postmortem_latest.md exists, read it and fix ONLY identified gaps.\n\n\
-On a fresh pass, check if target files already exist and are non-empty — skip them.\n\n\
-CRITICAL: All code MUST go inside the $app_dir subdirectory. The $app_dir directory \
-is the project root. Place pyproject.toml, package.json, source code, tests, \
-frontend/, config files, and .env.example all under $app_dir. Do NOT write to the repo root.\n\n\
+On a fresh pass, inspect whether target files already exist and are non-empty. If they already satisfy the specs, leave them alone; otherwise modify them in place. Do NOT skip required work just because files already exist.\n\n\
+CRITICAL: Treat $app_dir as the application root. If it is a nested subdirectory, keep code there. If it is '.' or the existing repo root, update the current project in place. Keep workflow scratch artifacts in $workflow_dir, not mixed into product source.\n\n\
 Follow the implementation plan step by step. For each capability spec:\n\
 1. Read the spec carefully, including acceptance criteria\n\
 2. Implement exactly what the spec describes\n\
@@ -295,7 +297,8 @@ Respond with:\n\
     // =========================================================================
 
     // Bootstrap
-    start -> check_toolchain
+    start -> prepare_workdirs
+    prepare_workdirs -> check_toolchain
     check_toolchain -> plan_fanout [condition="outcome=success"]
     check_toolchain -> postmortem
 
