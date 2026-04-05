@@ -159,9 +159,18 @@ During execution, emit concise live status updates after each major phase using 
    - Tech stack suggestion: [frontend + backend + AI provider/model]
    - Riskiest assumption: [from pre-mortem — what could kill this + how MVP mitigates it]
    Engagement hook: [one sentence — why someone would click and try the demo]
+
+   Design Direction:
+   - Visual style: [one of: minimal, bold, playful, editorial, dashboard]
+   - Reference design system: [pick from references/design-systems.md — e.g., "Dev Tool (Linear-inspired)" for dev tools, "Fintech (Stripe-inspired)" for business tools, "AI Platform (Claude-inspired)" for AI apps]
+   - Color palette: [pick from references/design-palettes.md or specify custom — list 5 hex colors: primary, secondary, accent, background, text]
+   - Font pairing: [heading font + body font from Google Fonts]
+   - Layout: [single page scroll / sidebar dashboard / multi-page app]
+   - Key polish target: [the one screen or interaction that must feel premium]
    ```
 
    - Title ≤32 chars and description ≤100 chars are hard limits enforced by Sundai.
+   - Design Direction must reference a specific design system and palette — do not leave generic or "TBD". The Fabro build and polish steps use these values to produce polished UI.
 
 2. **Build MVP via Fabro workflow + create NEW GitHub repo + push**
    - Create a **new public GitHub repo** first (no reusing old project repos).
