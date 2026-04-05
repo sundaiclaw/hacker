@@ -1,6 +1,11 @@
 # sundai-project-pipeline changelog
 
-## v1.22.0 - 2026-03-29
+## v1.22.0 - 2026-03-29 20:55 UTC
+- Incorporated the OpenSpec workflow into the Sundai pipeline.
+- Sundai project runs are now OpenSpec-first by default: create/update proposal, design, specs, and tasks before implementation.
+- Updated step 2 to require a GitHub repo → OpenSpec artifacts → `spec/spec.md` bridge → Fabro build sequence.
+- Added fallback guidance: if OpenSpec tooling fails, report the blocker and continue with the prior Fabro/manual path so the run can still ship.
+- Added an explicit cross-reference to `openspec-workflow` for artifact quality and shape.
 - Rewrote Step 1 ideation as a 5-phase structured process (Discover, Define, Develop, Deliver, Package).
 - Shifted primary research from Sundai project analysis to real-world signal scanning via web search. Sundai project fetch retained for deduplication only.
 - Added problem framing phase: How Might We statements, Job-to-Be-Done statements, current alternative + gap analysis, feasibility gating.
