@@ -127,9 +127,10 @@ match that aesthetic in component styling, spacing, and color usage."
     gate_build -> polish [condition="outcome=success"]
     gate_build -> implement
 
-    // Polish -> Design Check -> Exit (or retry)
+    // Polish -> Design Check -> Exit (or retry, with exhaustion fallback)
     polish -> design_check
     design_check -> gate_design
     gate_design -> exit [condition="context.design_ok=true"]
-    gate_design -> polish
+    gate_design -> polish [condition="context.design_ok=false"]
+    gate_design -> exit
 }
