@@ -204,7 +204,10 @@ During execution, emit concise live status updates after each major phase using 
      1. Write a bridge file at `spec/spec.md` summarizing: project name, what it does, tech stack, AI integration requirements, demo flow, and the OpenSpec change name.
      2. Copy the `fabro/` directory and `fabro.toml` from this workspace into the new repo.
      3. Run: `fabro run sundai-ship --auto-approve --no-retro`
-     4. This executes the plan → implement → verify (deps, lint, build) pipeline automatically.
+     4. This executes the plan → implement → verify (deps, lint, build) → polish → design_check pipeline automatically.
+     5. The polish node (max_visits=2) applies the 10-category design checklist from `fabro/workflows/sundai-ship/prompts/polish.md` using the spec's Design Direction.
+     6. The design_check node scores the result 1–5 on 5 dimensions (color, typography, responsive layout, state coverage, overall polish) and sets `context.design_ok`.
+     7. gate_design exits on `design_ok=true`, loops back to polish on `design_ok=false`, or falls back to `implement` if polish exhausts its retry budget with design still failing. If you see an unexpected retry from `implement`, check the design_check output.
    - Preferred implementation pattern:
      - OpenSpec defines the product and requirements.
      - `spec/spec.md` gives Fabro a compact execution brief.
