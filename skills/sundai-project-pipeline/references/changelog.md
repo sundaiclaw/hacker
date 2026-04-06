@@ -1,5 +1,14 @@
 # sundai-project-pipeline changelog
 
+## v1.23.0 - 2026-04-05
+- Integrated design skills into the sundai-ship Fabro workflow (closes sundaiclaw/hacker#3).
+- Added a Design Direction block to the Phase 5 ideation spec seed: every project must specify visual style, reference design system, color palette, font pairing, layout, and key polish target before build.
+- Added `polish` node to `fabro/workflows/sundai-ship/workflow.fabro` (max_visits=2) that runs a 10-category design quality pass after a successful build using `prompts/polish.md`.
+- Added `design_check` node + `gate_design` that scores the result 1–5 on color, typography, responsive layout, state coverage, and overall polish via `prompts/design-check.md`; sets `context.design_ok` and gates exit.
+- Gate behavior: exit on `design_ok=true`, loop back to polish on `design_ok=false`, fall back to `implement` if polish exhausts retries with design still failing (fixed across commits 777be04, de50212, 86ad38f).
+- Added `references/design-systems.md` (6 curated design system profiles) and `references/design-palettes.md` (12 palette + font pairing combos) extracted from Impeccable, UUPM, Bencium, and Awesome DESIGN.md rather than installing the full skill packs (Fabro nodes cannot invoke skills directly).
+- Updated `deploy/sync-hacker-skill.sh` to symlink the two new reference files into the hacker workspace.
+
 ## v1.22.0 - 2026-03-29 20:55 UTC
 - Incorporated the OpenSpec workflow into the Sundai pipeline.
 - Sundai project runs are now OpenSpec-first by default: create/update proposal, design, specs, and tasks before implementation.
