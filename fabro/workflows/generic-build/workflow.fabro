@@ -140,6 +140,12 @@ Follow the implementation plan step by step. For each capability spec:\n\
 1. Read the spec carefully, including acceptance criteria\n\
 2. Implement exactly what the spec describes\n\
 3. Respect the design doc's architecture decisions\n\n\
+Implementation discipline rules (mandatory):\n\
+- Do NOT invent helper names, exports, routes, or file locations without first reading the target files.\n\
+- If you rename or replace a public helper/function/schema/route, update every dependent import, test, and call site in the same pass.\n\
+- Before finishing, inspect imports/exports for touched modules and make sure tests reference real symbols.\n\
+- When verify failed previously, make the smallest targeted fix that resolves the logged mismatch; do not rewrite unrelated working code.\n\
+- Prefer preserving the current project shape over introducing a parallel structure unless the spec explicitly requires it.\n\n\
 After implementation, install dependencies as specified in the plan.\n\
 Log progress to $workflow_dir/implementation_log.md."
         ]
@@ -164,10 +170,13 @@ Check for:\n\
 2. SECURITY: No hardcoded secrets? Authentication enforced? CORS configured?\n\
 3. SIMPLICITY: Any over-engineered code? Can anything be simplified?\n\
 4. COMPLETENESS: All acceptance criteria from specs addressed?\n\
-5. CONSISTENCY: Types match API contracts? Frontend calls match backend routes?\n\n\
+5. CONSISTENCY: Types match API contracts? Frontend calls match backend routes?\n\
+6. SYMBOL INTEGRITY: Do imports/exports line up? Are tests calling real helpers that actually exist?\n\
+7. ROOT SHAPE: Does the implementation still respect $app_dir instead of silently drifting into a second structure?\n\n\
 For any issues found:\n\
 - Fix them directly in the source files\n\
-- Keep changes minimal — improve, don't rewrite\n\n\
+- Keep changes minimal — improve, don't rewrite\n\
+- If you change a public symbol, update all dependent tests/imports in the same review pass\n\n\
 Log changes to $workflow_dir/review_log.md."
         ]
     }
@@ -178,6 +187,22 @@ Log changes to $workflow_dir/review_log.md."
 
     subgraph cluster_verify {
         label="Verify"
+
+        consistency_check [
+            label="Consistency Check",
+            class="cheap",
+            prompt="Read the implementation before shell verification and check structural consistency.\n\n\
+Inspect source files, tests, and package/app entry points for:\n\
+1. Missing or mismatched imports/exports\n\
+2. Tests referencing helpers/functions/routes that do not actually exist\n\
+3. Public symbol renames that were not propagated to dependents\n\
+4. App-root drift (for example, code created in the wrong subtree relative to $app_dir)\n\
+5. Obvious script/path mismatches that will cause lint/test/build to fail for avoidable reasons\n\n\
+If all checks pass: {\"context_updates\": {\"consistency_ok\": \"true\"}}\n\
+If any fail, write a compact actionable list to $workflow_dir/verify_errors.log and respond with:\n\
+{\"context_updates\": {\"consistency_ok\": \"false\"}}"
+        ]
+        gate_consistency [shape=diamond, label="Consistency OK?"]
 
         verify_deps [
             shape=parallelogram,
@@ -287,6 +312,7 @@ Output to $workflow_dir/postmortem_latest.md (overwrite previous):\n\
 - What works and must be preserved\n\
 - What failed and must be fixed\n\
 - Concrete next changes (specific files, specific fixes)\n\
+- Recurring mismatch class when applicable (missing export, stale import, test/api drift, app-root drift, script/path mismatch)\n\
 - Do NOT direct from-scratch restart — preserve working code\n\n\
 Respond with:\n\
 {\"preferred_next_label\": \"replan\"}"
@@ -315,9 +341,13 @@ Respond with:\n\
 
     // Implement -> Review -> Verify chain
     implement -> review_code
-    review_code -> verify_deps
+    review_code -> consistency_check
 
     // Verify chain
+    consistency_check -> gate_consistency
+    gate_consistency -> verify_deps [condition="context.consistency_ok=true"]
+    gate_consistency -> implement
+
     verify_deps -> gate_deps
     gate_deps -> verify_lint [condition="outcome=success"]
     gate_deps -> implement
