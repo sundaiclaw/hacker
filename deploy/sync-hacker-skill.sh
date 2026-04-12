@@ -16,20 +16,6 @@ fi
 git -C "$REPO" fetch origin main
 git -C "$REPO" reset --hard origin/main
 
-# Ensure .claude/skills/ symlinks resolve correctly.
-# Git stores them as mode-120000 blobs; on systems with core.symlinks=true
-# they are already real symlinks after checkout. On systems with
-# core.symlinks=false they are plain text files containing the target path.
-# Re-create real symlinks here so Claude Code can resolve the skill dirs.
-for target in "$REPO"/skills/*/; do
-  name=$(basename "$target")
-  link="$REPO/.claude/skills/$name"
-  # Skip if already a valid symlink
-  [ -L "$link" ] && [ -d "$link" ] && continue
-  rm -rf "$link"
-  ln -sfn "../../skills/$name" "$link"
-done
-
 ln -sfn "$ENV_TARGET" "$ENV_LINK"
 mkdir -p "$REFS_LINK"
 for f in checklist.md ai-endpoint.md sundai-api-mode.md changelog.md design-systems.md design-palettes.md; do
