@@ -1,5 +1,10 @@
 # sundai-project-pipeline changelog
 
+## v1.27.0 - 2026-04-12
+- Added a hard completion gate to the Sundai pipeline skill: never report success just because create/save/submit succeeded.
+- Finalization now requires reloading the **public** project page and visibly verifying GitHub link, Demo link, non-null full description, team member `vyahhi`, and thumbnail.
+- Expanded the run checklist to include Demo URL persistence, thumbnail re-verification, and public-page/card QA before completion is reported.
+
 ## v1.26.0 - 2026-04-12
 - Tightened Sundai auth recovery guidance after a live run: stale Clerk session mint failure is not a terminal auth failure.
 - Documented the expected recovery order explicitly: retry JWT mint, then direct Clerk password re-auth, persist fresh env values, then resume API-first execution.

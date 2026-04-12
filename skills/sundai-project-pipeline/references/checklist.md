@@ -35,10 +35,19 @@
 - [ ] If UI fallback used, reason was explicitly logged
 - [ ] Saved after edits
 - [ ] Reloaded edit page and re-verified GitHub URL is still filled
+- [ ] Reloaded edit page and re-verified Demo URL is still filled
 - [ ] Reloaded edit page and re-verified Full Description is still filled
 - [ ] Reloaded edit page and re-verified team member `vyahhi` is still present
+- [ ] Reloaded edit/API state and re-verified thumbnail is present
 - [ ] If missing, used UI add-member fallback and re-verified presence before publish
 - [ ] Submitted/published (`Delist` shown)
+- [ ] Public project page reloaded after final save/publish
+- [ ] Public page visibly shows GitHub link
+- [ ] Public page visibly shows Demo link
+- [ ] Public page visibly shows non-null full description
+- [ ] Public page visibly shows team member `vyahhi` / Nikolay Vyahhi
+- [ ] Public page visibly shows thumbnail
+- [ ] Completion was reported only after the public-page checks passed
 - [ ] Liked own project and verified like count/state
 - [ ] Deployment completed and URL captured
 - [ ] Immediate link sync completed before health wait:

@@ -290,9 +290,12 @@ During execution, emit concise live status updates after each major phase using 
    - Verify persisted fields via API readback first; use UI reload check as fallback.
    - Verify all are still present (not empty/null):
      - GitHub URL
+     - Demo URL
      - Full Description
      - Team member `vyahhi`
+     - Thumbnail present
    - If any field is missing, patch again and re-verify before publish.
+   - Do **not** report the project as done just because create/save succeeded.
 
 8. **Publish/submit (cookie-backed API mandatory-first)**
    - Use `PATCH /api/projects/{projectId}/submit` with JSON body `{ "status": "APPROVED" }` by default.
@@ -326,8 +329,17 @@ During execution, emit concise live status updates after each major phase using 
    - If deployment is still warming, wait/retry and report `waiting for live health` status.
    - If smoke test fails after retries, fix and redeploy before finalizing.
 
-12. **Finalize publish surface checks**
+12. **Finalize publish surface checks (hard completion gate)**
+   - Reload the **public project page** after the last save/publish action.
    - Confirm project remains published (`Delist` visible) and links still intact after health checks.
+   - Public-page QA must confirm all of the following are visibly present on the live page/card before declaring completion:
+     - GitHub link visible
+     - Demo link visible
+     - Full description renders (not `null`, not empty)
+     - Team section includes `vyahhi` / Nikolay Vyahhi
+     - Thumbnail is visible
+   - If any public-page item is missing, return to edit mode, fix it, save again, and repeat the public-page QA.
+   - Never tell the user the Sundai project is finished until this public-page QA passes.
 
 13. **Update GitHub README + lint**
    - Ensure README includes required sections:
@@ -358,6 +370,7 @@ During execution, emit concise live status updates after each major phase using 
    - Mirror updated skill files to `sundaiclaw/hacker`.
 
 15. **Return final artifacts**
+   - Reply only after the hard completion gate above passes.
    - Reply with:
      - GitHub repo URL
      - Sundai project URL
