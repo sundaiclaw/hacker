@@ -7,10 +7,11 @@ Use API calls first for speed/reliability. Use UI only as fallback.
 - After every write, do readback verification before proceeding.
 - Log which step used fallback when API fails.
 - On `401`/`Unauthorized`: mint a fresh session JWT and retry first.
-- If the stored Clerk session/client pair is stale, refresh auth via direct Clerk password sign-in using bot credentials from `.env.sundai`, update the env values, retry the API call, then use UI only as a last resort.
+- If the stored Clerk session/client pair is stale, direct Clerk password sign-in is the expected recovery path. Do not treat one failed mint attempt as final.
+- If browser login is required, verify the post-login state (e.g. presence of `My Profile` / `New Project`) before assuming auth succeeded.
 
 ## Authentication (Clerk direct sign-in + session tokens)
-Sundai uses Clerk. The fastest happy path is still API-first token minting from stored Clerk session state, but direct Clerk password sign-in is a working recovery path when that state goes stale.
+Sundai uses Clerk. The fastest happy path is API-first token minting from stored Clerk session state, but direct Clerk password sign-in is the normal recovery path when that state goes stale.
 
 **Working auth paths:**
 1. **Primary path:** `SUNDAI_CLERK_CLIENT` (long-lived `__client`) + `SUNDAI_SESSION_ID` are stored in `.env.sundai`.
@@ -18,8 +19,9 @@ Sundai uses Clerk. The fastest happy path is still API-first token minting from 
    `POST https://clerk.sundai.club/v1/client/sessions/{SUNDAI_SESSION_ID}/tokens`
    with `Cookie: __client={SUNDAI_CLERK_CLIENT}`.
 3. Use the returned JWT as `Cookie: __session={jwt}; __client_uat={unix_ts}` in API requests.
-4. **Recovery path:** if token minting fails because the stored session is expired/revoked, perform direct Clerk password sign-in with the bot account credentials from `.env.sundai`, capture the fresh `__client` + session id, persist them back to `.env.sundai`, and resume the token-mint flow.
-5. Only if both API auth paths fail should the run fall back to browser/UI interaction.
+4. **Recovery path:** if token minting fails because the stored session is expired/revoked, re-auth with the bot credentials from `.env.sundai`, capture the fresh `__client` + session id, persist them back to `.env.sundai`, and resume the token-mint flow.
+5. If scripted password refresh is unavailable or flaky, use browser sign-in as the auth recovery path — but type into Clerk inputs with selectors when React-controlled fields ignore a normal fill action (for example `#identifier-field` and `#password-field`).
+6. Only after auth recovery fails should the run stop or ask for intervention.
 
 **Quick usage:**
 ```bash

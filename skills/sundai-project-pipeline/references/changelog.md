@@ -1,5 +1,10 @@
 # sundai-project-pipeline changelog
 
+## v1.26.0 - 2026-04-12
+- Tightened Sundai auth recovery guidance after a live run: stale Clerk session mint failure is not a terminal auth failure.
+- Documented the expected recovery order explicitly: retry JWT mint, then direct Clerk password re-auth, persist fresh env values, then resume API-first execution.
+- Added a concrete browser-auth fallback note for Clerk/React forms: if `fill` does not stick, use selector-based typing (for example `#identifier-field` / `#password-field`) and verify the signed-in state before continuing.
+
 ## v1.25.0 - 2026-04-05
 - Integrated design-skill references into the Sundai shipping workflow assets (closes sundaiclaw/hacker#3).
 - Added a Design Direction block to the Phase 5 ideation spec seed: every project must specify visual style, reference design system, color palette, font pairing, layout, and key polish target before build.

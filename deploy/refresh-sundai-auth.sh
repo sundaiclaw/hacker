@@ -1,5 +1,10 @@
 #!/usr/bin/env bash
-# refresh-sundai-auth.sh — Durable Sundai auth via Clerk + GitHub OAuth
+# refresh-sundai-auth.sh — Sundai auth helper (JWT mint + legacy OAuth fallback)
+#
+# NOTE:
+# - The preferred recovery path is direct Clerk password re-auth using bot creds from .env.sundai.
+# - This script still implements the older GitHub OAuth fallback and should not be treated as the only auth refresh path.
+# - If direct Clerk/browser password login succeeds, persist fresh SUNDAI_CLERK_CLIENT + SUNDAI_SESSION_ID and resume API-first execution.
 #
 # Usage:
 #   source deploy/refresh-sundai-auth.sh   # loads sundai_cookie_header function

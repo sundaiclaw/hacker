@@ -38,7 +38,7 @@ Execute a complete Sundai shipping run with no skipped steps. Default to this pi
 
 ## API-first enforcement (mandatory)
 - Use Sundai Website API as the default execution path for create/edit/submit/verify.
-- **Auth via inline curl** (do NOT use browser for auth):
+- **Auth happy path via inline curl:**
   1. Load env: `source .env.sundai` (contains `SUNDAI_CLERK_CLIENT` and `SUNDAI_SESSION_ID`; password creds may also be present for recovery)
   2. Mint a fresh 60s session JWT before each API call:
      ```bash
@@ -49,9 +49,14 @@ Execute a complete Sundai shipping run with no skipped steps. Default to this pi
   3. Use it: `curl -H "Cookie: __session=$JWT; __client_uat=$(date +%s)" https://www.sundai.club/api/...`
 - **Important:** The sundaiclaw bot account hacker ID is `bb909f3a-89b6-402c-8062-76172c6aec28`. Always use this as `launchLeadId` when creating projects so the bot can edit/publish them.
 - If API calls return `401`/`Unauthorized`, mint a new JWT and retry once.
-- If Clerk session minting is broken because the stored session/client pair is stale, refresh auth via direct Clerk password sign-in using the bot credentials in `.env.sundai`, update `SUNDAI_CLERK_CLIENT` + `SUNDAI_SESSION_ID`, then resume API-first execution.
-- Do NOT fall back to browser for auth unless the direct Clerk password recovery path fails.
-- UI/browser actions are fallback-only when API call fails after retry/re-auth.
+- If Clerk token minting fails because the stored session/client pair is stale, do not stop at that failure: direct Clerk password sign-in is a valid recovery path and usually works.
+- Recovery order:
+  1. Retry JWT mint once.
+  2. Re-auth with the bot credentials from `.env.sundai`.
+  3. Persist fresh `SUNDAI_CLERK_CLIENT` + `SUNDAI_SESSION_ID` back to `.env.sundai`.
+  4. Resume API-first execution.
+  5. Only then use UI/browser fallback for the actual product flow if an API write still fails.
+- If browser auth is needed, do not assume `fill` will stick on Clerk/React inputs. Use selector-based typing when necessary (for example `#identifier-field` and `#password-field`) and verify that the signed-in state actually changed before continuing.
 - Every UI fallback must be explicitly reported with step number + reason.
 - After any write (API or UI), perform API readback verification whenever possible.
 
