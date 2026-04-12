@@ -15,6 +15,7 @@ fi
 
 git -C "$REPO" fetch origin main
 git -C "$REPO" reset --hard origin/main
+
 ln -sfn "$ENV_TARGET" "$ENV_LINK"
 mkdir -p "$REFS_LINK"
 for f in checklist.md ai-endpoint.md sundai-api-mode.md changelog.md design-systems.md design-palettes.md; do
