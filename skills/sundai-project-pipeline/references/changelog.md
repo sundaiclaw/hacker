@@ -1,5 +1,12 @@
 # sundai-project-pipeline changelog
 
+## v1.25.0 - 2026-04-05
+- Integrated design-skill references into the Sundai shipping workflow assets (closes sundaiclaw/hacker#3).
+- Added a Design Direction block to the Phase 5 ideation spec seed: every project must specify visual style, reference design system, color palette, font pairing, layout, and key polish target before build.
+- Added `prompts/polish.md` and `prompts/design-check.md` plus related `fabro/workflows/sundai-ship/workflow.fabro` support so the legacy `sundai-ship` flow can run an extra design quality pass when used.
+- Added `references/design-systems.md` and `references/design-palettes.md` so design direction choices are concrete instead of generic.
+- Updated `deploy/sync-hacker-skill.sh` to include the new design reference files.
+
 ## v1.24.0 - 2026-03-30 21:41 UTC
 - Updated the Sundai pipeline to default to the corrected Fabro generic-build path instead of the stale `fabro run sundai-ship --auto-approve --no-retro` shorthand.
 - Added mandatory Fabro validate + preflight steps before the full run.
@@ -11,7 +18,6 @@
 - Updated pipeline auth rules to keep API-first execution but recover stale `SUNDAI_CLERK_CLIENT` / `SUNDAI_SESSION_ID` by re-signing in through Clerk with bot credentials from `.env.sundai`.
 - Tightened fallback order: retry JWT mint, then direct Clerk password re-auth, then UI/browser fallback only if both auth paths fail.
 - Updated API reference to stop assuming GitHub OAuth is the only recovery mechanism.
-
 
 ## v1.22.0 - 2026-03-29 20:55 UTC
 - Incorporated the OpenSpec workflow into the Sundai pipeline.

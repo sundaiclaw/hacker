@@ -48,7 +48,12 @@ Build the full MVP inside $app_dir/:\n\
 - AI must call OpenRouter via env vars OPENROUTER_BASE_URL, OPENROUTER_API_KEY, OPENROUTER_MODEL\n\
 - Never hardcode secrets\n\
 - Make the UI clean and demoable\n\
-- Include a README with setup instructions"
+- Include a README with setup instructions\n\n\
+IMPORTANT — Design Direction: Read the 'Design Direction' section of the spec carefully.\n\
+Use the specified color palette, font pairing, and layout style throughout the UI.\n\
+Do not use default framework colors or generic styling — the spec defines the visual target.\n\
+If the spec names a reference design system (e.g., 'Linear-inspired', 'Stripe-inspired'),\n\
+match that aesthetic in component styling, spacing, and color usage."
     ]
 
     // =========================================================================
@@ -85,6 +90,23 @@ Build the full MVP inside $app_dir/:\n\
     gate_build [shape=diamond, label="Build OK?"]
 
     // =========================================================================
+    // Polish — design quality pass
+    // =========================================================================
+
+    polish [
+        label="Polish",
+        max_visits=2,
+        prompt="@prompts/polish.md"
+    ]
+
+    design_check [
+        shape=tab,
+        label="Design Check",
+        prompt="@prompts/design-check.md"
+    ]
+    gate_design [shape=diamond, label="Design OK?"]
+
+    // =========================================================================
     // Edges
     // =========================================================================
 
@@ -102,6 +124,12 @@ Build the full MVP inside $app_dir/:\n\
     fix_lints -> verify_lint
 
     verify_build -> gate_build
-    gate_build -> exit [condition="outcome=success"]
+    gate_build -> polish [condition="outcome=success"]
     gate_build -> implement
+
+    // Polish -> Design Check -> Exit (only when design passes)
+    polish -> design_check
+    design_check -> gate_design
+    gate_design -> polish [condition="context.design_ok=false"]
+    gate_design -> exit [condition="context.design_ok=true"]
 }

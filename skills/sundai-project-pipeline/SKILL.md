@@ -177,9 +177,18 @@ During execution, emit concise live status updates after each major phase using 
    - Tech stack suggestion: [frontend + backend + AI provider/model]
    - Riskiest assumption: [from pre-mortem — what could kill this + how MVP mitigates it]
    Engagement hook: [one sentence — why someone would click and try the demo]
+
+   Design Direction:
+   - Visual style: [one of: minimal, bold, playful, editorial, dashboard]
+   - Reference design system: [pick from references/design-systems.md — e.g., "Dev Tool (Linear-inspired)" for dev tools, "Fintech (Stripe-inspired)" for business tools, "AI Platform (Claude-inspired)" for AI apps]
+   - Color palette: [pick from references/design-palettes.md or specify custom — list 5 hex colors: primary, secondary, accent, background, text]
+   - Font pairing: [heading font + body font from Google Fonts]
+   - Layout: [single page scroll / sidebar dashboard / multi-page app]
+   - Key polish target: [the one screen or interaction that must feel premium]
    ```
 
    - Title ≤32 chars and description ≤100 chars are hard limits enforced by Sundai.
+   - Design Direction must reference a specific design system and palette — do not leave generic or "TBD". The Fabro build and polish steps use these values to produce polished UI.
 
 2. **Create NEW GitHub repo + generate OpenSpec artifacts + build MVP via Fabro**
    - Create a **new public GitHub repo** for the project (no reusing old project repos), but do **not** try to `gh repo create --push` from a truly empty repo.
@@ -196,7 +205,7 @@ During execution, emit concise live status updates after each major phase using 
      4. Keep them concise but real; they should capture product intent, scope, decisions, requirements, and implementation tasks.
      5. If the repo already contains OpenSpec artifacts, update them instead of duplicating them.
    - Then hand the implementation to Fabro via the corrected generic-build path:
-     1. Write a bridge file at `spec/spec.md` summarizing: project name, what it does, tech stack, AI integration requirements, demo flow, and the OpenSpec change name.
+     1. Write a bridge file at `spec/spec.md` summarizing: project name, what it does, tech stack, AI integration requirements, demo flow, the OpenSpec change name, and the chosen Design Direction.
      2. Copy the `fabro/` directory and `fabro.toml` from this workspace into the new repo.
      3. Write `fabro/workflows/generic-build/runs/sundai-ship.toml` with:
         - `graph = "../workflow.fabro"`
@@ -207,6 +216,7 @@ During execution, emit concise live status updates after each major phase using 
      5. Run: `fabro run fabro/workflows/generic-build/runs/sundai-ship.toml --preflight --sandbox local`
      6. Run: `fabro run fabro/workflows/generic-build/runs/sundai-ship.toml --auto-approve --sandbox local`
      7. This executes the corrected plan → implement → review → verify pipeline automatically for repo-root or nested-app repos.
+     8. If the repo uses `fabro/workflows/sundai-ship/workflow.fabro`, the added design-skill prompts (`prompts/polish.md` and `prompts/design-check.md`) can use the spec's Design Direction to do an extra polish / design quality pass after a clean build.
    - Preferred implementation pattern:
      - OpenSpec defines the product and requirements.
      - `spec/spec.md` gives Fabro a compact execution brief.
