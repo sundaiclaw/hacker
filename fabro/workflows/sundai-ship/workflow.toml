@@ -4,3 +4,5 @@ version = 1
 app_dir = "app"
 spec_dir = "spec"
 workflow_dir = ".workflow"
+default_model = "gpt-5.4"
+cheap_model = "gpt-5.4"
