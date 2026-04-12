@@ -1,4 +1,4 @@
-Read the project spec at $spec_dir/spec.md, paying close attention to the **Design Direction** section. Then review and fix the implementation in $app_dir/ for the specific issues below. Keep changes minimal — fix gaps, don't redesign.
+Read spec/spec.md first when present for the **Design Direction** details. Then read the project's OpenSpec design doc at $spec_dir/changes/*/design.md, the proposal at $spec_dir/changes/*/proposal.md, and capability specs in $spec_dir/changes/*/specs/ for acceptance criteria. Then review and fix the implementation in $app_dir/ for the specific issues below. Keep changes minimal — fix gaps, don't redesign.
 
 ## 1. Match the spec's design direction
 

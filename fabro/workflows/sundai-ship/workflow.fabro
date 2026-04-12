@@ -1,8 +1,9 @@
 digraph SundaiShip {
     graph [
-        goal="Build a demoable Sundai MVP from the spec in $spec_dir/. \
+        goal="Build a demoable Sundai MVP from the OpenSpec artifacts in $spec_dir/. \
+Read changes/ for proposal, design, tasks, and capability specs. Also read spec/spec.md as the design-direction bridge when present. \
 The app must include a real AI integration via OpenRouter (free model). \
-All code goes in $app_dir/. After building, verify it runs.",
+All code goes in $app_dir/. After building, verify it runs and meets the design direction.",
         rankdir=LR,
         default_max_retry=2,
         retry_target="implement",
@@ -15,23 +16,7 @@ All code goes in $app_dir/. After building, verify it runs.",
 
     exit [shape=Msquare, label="Exit"]
 
-    // =========================================================================
-    // Plan — read spec, produce implementation plan
-    // =========================================================================
-
     start [shape=Mdiamond, label="Start"]
-
-    plan [
-        shape=tab,
-        label="Plan",
-        prompt="Read the project spec from $spec_dir/spec.md.\n\
-Create a concise implementation plan:\n\
-1. Tech stack and file structure\n\
-2. Key components and their interactions\n\
-3. How AI (OpenRouter free model) integrates into the user-facing flow\n\
-4. What the demo flow looks like\n\
-Write plan to $workflow_dir/plan.md."
-    ]
 
     // =========================================================================
     // Implement — write all the code
@@ -40,7 +25,12 @@ Write plan to $workflow_dir/plan.md."
     implement [
         shape=box,
         label="Implement",
-        prompt="Read $workflow_dir/plan.md and the spec at $spec_dir/spec.md.\n\
+        prompt="Read the project specification from OpenSpec artifacts:\n\
+- $spec_dir/changes/*/proposal.md (what to build, success criteria, demo flow)\n\
+- $spec_dir/changes/*/design.md (architecture, tech stack, key decisions, Design Direction)\n\
+- $spec_dir/changes/*/tasks.md (dependency-ordered implementation steps)\n\
+- All files in $spec_dir/changes/*/specs/ (detailed capability specs with acceptance criteria)\n\
+- spec/spec.md when present (bridge summary + Design Direction details used by the Sundai pipeline)\n\n\
 If $workflow_dir/verify_errors.log exists, read it FIRST and fix those errors.\n\n\
 Build the full MVP inside $app_dir/:\n\
 - All source code, configs, package files go in $app_dir/\n\
@@ -48,11 +38,12 @@ Build the full MVP inside $app_dir/:\n\
 - AI must call OpenRouter via env vars OPENROUTER_BASE_URL, OPENROUTER_API_KEY, OPENROUTER_MODEL\n\
 - Never hardcode secrets\n\
 - Make the UI clean and demoable\n\
-- Include a README with setup instructions\n\n\
-IMPORTANT — Design Direction: Read the 'Design Direction' section of the spec carefully.\n\
+- Include a README with setup instructions\n\
+- Follow the tasks.md dependency order when building\n\n\
+IMPORTANT — Design Direction: Read spec/spec.md first when present, then use design.md/proposal.md to confirm decisions.\n\
 Use the specified color palette, font pairing, and layout style throughout the UI.\n\
 Do not use default framework colors or generic styling — the spec defines the visual target.\n\
-If the spec names a reference design system (e.g., 'Linear-inspired', 'Stripe-inspired'),\n\
+If a reference design system is named (e.g., 'Linear-inspired', 'Stripe-inspired'),\n\
 match that aesthetic in component styling, spacing, and color usage."
     ]
 
@@ -110,8 +101,7 @@ match that aesthetic in component styling, spacing, and color usage."
     // Edges
     // =========================================================================
 
-    start -> plan
-    plan -> implement
+    start -> implement
 
     implement -> verify_deps
     verify_deps -> gate_deps
@@ -130,6 +120,6 @@ match that aesthetic in component styling, spacing, and color usage."
     // Polish -> Design Check -> Exit (only when design passes)
     polish -> design_check
     design_check -> gate_design
-    gate_design -> polish [condition="context.design_ok=false"]
     gate_design -> exit [condition="context.design_ok=true"]
+    gate_design -> polish
 }

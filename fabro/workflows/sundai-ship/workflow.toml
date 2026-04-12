@@ -2,5 +2,5 @@ version = 1
 
 [vars]
 app_dir = "app"
-spec_dir = "spec"
+spec_dir = "openspec"
 workflow_dir = ".workflow"

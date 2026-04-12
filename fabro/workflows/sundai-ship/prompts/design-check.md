@@ -1,4 +1,4 @@
-Read the project spec at $spec_dir/spec.md (especially the Design Direction section) and review all frontend files in $app_dir/.
+Read spec/spec.md first when present for the Design Direction details, then read the project's OpenSpec design doc at $spec_dir/changes/*/design.md and the proposal at $spec_dir/changes/*/proposal.md, then review all frontend files in $app_dir/.
 
 Score the implementation 1-5 on each dimension:
 
