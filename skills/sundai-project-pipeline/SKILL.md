@@ -18,8 +18,10 @@ Execute a complete Sundai shipping run with no skipped steps. Default to this pi
   4. create an OpenSpec change using the project slug/name
   5. write the core artifacts: `proposal.md`, `design.md`, `specs/.../spec.md`, `tasks.md`
   6. summarize the implementation target into `spec/spec.md` for Fabro
-  7. run Fabro to implement from those specs
+  7. write a repo-local Fabro run config for the corrected generic-build workflow (`app_dir="."`, `spec_dir="openspec"`, `workflow_dir=".workflow"`)
+  8. run Fabro validate → preflight → full execution from those specs
 - Do **not** skip OpenSpec just because the project is small. The Sundai pipeline should leave behind reusable product/spec artifacts as well as code.
+- Default assumption: many Sundai repos are repo-root apps. The Fabro path must support in-place implementation when `app_dir="."`; do not assume a fresh nested app directory.
 - If OpenSpec tooling fails or the repo cannot be initialized cleanly, report the blocker, then fall back to the previous direct-Fabro/manual path so the shipping run can still complete.
 
 ## Execution model (mandatory — read first)
@@ -37,7 +39,7 @@ Execute a complete Sundai shipping run with no skipped steps. Default to this pi
 ## API-first enforcement (mandatory)
 - Use Sundai Website API as the default execution path for create/edit/submit/verify.
 - **Auth via inline curl** (do NOT use browser for auth):
-  1. Load env: `source .env.sundai` (contains `SUNDAI_CLERK_CLIENT` and `SUNDAI_SESSION_ID`)
+  1. Load env: `source .env.sundai` (contains `SUNDAI_CLERK_CLIENT` and `SUNDAI_SESSION_ID`; password creds may also be present for recovery)
   2. Mint a fresh 60s session JWT before each API call:
      ```bash
      JWT=$(curl -s -X POST "https://clerk.sundai.club/v1/client/sessions/$SUNDAI_SESSION_ID/tokens" \
@@ -46,8 +48,10 @@ Execute a complete Sundai shipping run with no skipped steps. Default to this pi
      ```
   3. Use it: `curl -H "Cookie: __session=$JWT; __client_uat=$(date +%s)" https://www.sundai.club/api/...`
 - **Important:** The sundaiclaw bot account hacker ID is `bb909f3a-89b6-402c-8062-76172c6aec28`. Always use this as `launchLeadId` when creating projects so the bot can edit/publish them.
-- If API calls return `401`/`Unauthorized`, mint a new JWT and retry. Do NOT fall back to browser for auth.
-- UI/browser actions are fallback-only when API call fails after retry.
+- If API calls return `401`/`Unauthorized`, mint a new JWT and retry once.
+- If Clerk session minting is broken because the stored session/client pair is stale, refresh auth via direct Clerk password sign-in using the bot credentials in `.env.sundai`, update `SUNDAI_CLERK_CLIENT` + `SUNDAI_SESSION_ID`, then resume API-first execution.
+- Do NOT fall back to browser for auth unless the direct Clerk password recovery path fails.
+- UI/browser actions are fallback-only when API call fails after retry/re-auth.
 - Every UI fallback must be explicitly reported with step number + reason.
 - After any write (API or UI), perform API readback verification whenever possible.
 
@@ -200,14 +204,19 @@ During execution, emit concise live status updates after each major phase using 
      3. Generate the four core artifacts: `proposal.md`, `design.md`, `specs/.../spec.md`, and `tasks.md`.
      4. Keep them concise but real; they should capture product intent, scope, decisions, requirements, and implementation tasks.
      5. If the repo already contains OpenSpec artifacts, update them instead of duplicating them.
-   - Then hand the implementation to Fabro:
-     1. Write a bridge file at `spec/spec.md` summarizing: project name, what it does, tech stack, AI integration requirements, demo flow, and the OpenSpec change name.
+   - Then hand the implementation to Fabro via the corrected generic-build path:
+     1. Write a bridge file at `spec/spec.md` summarizing: project name, what it does, tech stack, AI integration requirements, demo flow, the OpenSpec change name, and the chosen Design Direction.
      2. Copy the `fabro/` directory and `fabro.toml` from this workspace into the new repo.
-     3. Run: `fabro run sundai-ship --auto-approve --no-retro`
-     4. This executes the plan → implement → verify (deps, lint, build) → polish → design_check pipeline automatically.
-     5. The polish node (max_visits=2) applies the 10-category design checklist from `fabro/workflows/sundai-ship/prompts/polish.md` using the spec's Design Direction.
-     6. The design_check node scores the result 1–5 on 5 dimensions (color, typography, responsive layout, state coverage, overall polish) and sets `context.design_ok`.
-     7. gate_design exits on `design_ok=true`, loops back to polish on `design_ok=false`, or falls back to `implement` if polish exhausts its retry budget with design still failing. If you see an unexpected retry from `implement`, check the design_check output.
+     3. Write `fabro/workflows/generic-build/runs/sundai-ship.toml` with:
+        - `graph = "../workflow.fabro"`
+        - `app_dir = "."`
+        - `spec_dir = "openspec"`
+        - `workflow_dir = ".workflow"`
+     4. Run: `fabro validate fabro/workflows/generic-build/workflow.fabro`
+     5. Run: `fabro run fabro/workflows/generic-build/runs/sundai-ship.toml --preflight --sandbox local`
+     6. Run: `fabro run fabro/workflows/generic-build/runs/sundai-ship.toml --auto-approve --sandbox local`
+     7. This executes the corrected plan → implement → review → verify pipeline automatically for repo-root or nested-app repos.
+     8. If the repo uses `fabro/workflows/sundai-ship/workflow.fabro`, the added design-skill prompts (`prompts/polish.md` and `prompts/design-check.md`) can use the spec's Design Direction to do an extra polish / design quality pass after a clean build.
    - Preferred implementation pattern:
      - OpenSpec defines the product and requirements.
      - `spec/spec.md` gives Fabro a compact execution brief.

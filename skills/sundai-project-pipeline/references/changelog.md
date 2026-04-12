@@ -1,13 +1,23 @@
 # sundai-project-pipeline changelog
 
-## v1.23.0 - 2026-04-05
-- Integrated design skills into the sundai-ship Fabro workflow (closes sundaiclaw/hacker#3).
+## v1.25.0 - 2026-04-05
+- Integrated design-skill references into the Sundai shipping workflow assets (closes sundaiclaw/hacker#3).
 - Added a Design Direction block to the Phase 5 ideation spec seed: every project must specify visual style, reference design system, color palette, font pairing, layout, and key polish target before build.
-- Added `polish` node to `fabro/workflows/sundai-ship/workflow.fabro` (max_visits=2) that runs a 10-category design quality pass after a successful build using `prompts/polish.md`.
-- Added `design_check` node + `gate_design` that scores the result 1–5 on color, typography, responsive layout, state coverage, and overall polish via `prompts/design-check.md`; sets `context.design_ok` and gates exit.
-- Gate behavior: exit on `design_ok=true`, loop back to polish on `design_ok=false`, fall back to `implement` if polish exhausts retries with design still failing (fixed across commits 777be04, de50212, 86ad38f).
-- Added `references/design-systems.md` (6 curated design system profiles) and `references/design-palettes.md` (12 palette + font pairing combos) extracted from Impeccable, UUPM, Bencium, and Awesome DESIGN.md rather than installing the full skill packs (Fabro nodes cannot invoke skills directly).
-- Updated `deploy/sync-hacker-skill.sh` to symlink the two new reference files into the hacker workspace.
+- Added `prompts/polish.md` and `prompts/design-check.md` plus related `fabro/workflows/sundai-ship/workflow.fabro` support so the legacy `sundai-ship` flow can run an extra design quality pass when used.
+- Added `references/design-systems.md` and `references/design-palettes.md` so design direction choices are concrete instead of generic.
+- Updated `deploy/sync-hacker-skill.sh` to include the new design reference files.
+
+## v1.24.0 - 2026-03-30 21:41 UTC
+- Updated the Sundai pipeline to default to the corrected Fabro generic-build path instead of the stale `fabro run sundai-ship --auto-approve --no-retro` shorthand.
+- Added mandatory Fabro validate + preflight steps before the full run.
+- Standardized repo-local Fabro run config for Sundai builds: `app_dir="."`, `spec_dir="openspec"`, `workflow_dir=".workflow"`.
+- Documented that Sundai repos are often repo-root apps and the Fabro path must support in-place implementation instead of assuming a fresh nested app directory.
+
+## v1.23.0 - 2026-03-30 00:32 UTC
+- Corrected Sundai auth guidance: direct Clerk password sign-in is a valid recovery path; OAuth-only wording was wrong.
+- Updated pipeline auth rules to keep API-first execution but recover stale `SUNDAI_CLERK_CLIENT` / `SUNDAI_SESSION_ID` by re-signing in through Clerk with bot credentials from `.env.sundai`.
+- Tightened fallback order: retry JWT mint, then direct Clerk password re-auth, then UI/browser fallback only if both auth paths fail.
+- Updated API reference to stop assuming GitHub OAuth is the only recovery mechanism.
 
 ## v1.22.0 - 2026-03-29 20:55 UTC
 - Incorporated the OpenSpec workflow into the Sundai pipeline.
