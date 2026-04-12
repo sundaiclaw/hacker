@@ -1,7 +1,7 @@
 digraph SundaiShip {
     graph [
         goal="Build a demoable Sundai MVP from the OpenSpec artifacts in $spec_dir/. \
-Read changes/ for proposal, design, and tasks; read specs/ for capability specs. \
+Read changes/ for proposal, design, tasks, and capability specs. Also read spec/spec.md as the design-direction bridge when present. \
 The app must include a real AI integration via OpenRouter (free model). \
 All code goes in $app_dir/. After building, verify it runs and meets the design direction.",
         rankdir=LR,
@@ -29,7 +29,8 @@ All code goes in $app_dir/. After building, verify it runs and meets the design 
 - $spec_dir/changes/*/proposal.md (what to build, success criteria, demo flow)\n\
 - $spec_dir/changes/*/design.md (architecture, tech stack, key decisions, Design Direction)\n\
 - $spec_dir/changes/*/tasks.md (dependency-ordered implementation steps)\n\
-- All files in $spec_dir/specs/ (detailed capability specs with acceptance criteria)\n\n\
+- All files in $spec_dir/changes/*/specs/ (detailed capability specs with acceptance criteria)\n\
+- spec/spec.md when present (bridge summary + Design Direction details used by the Sundai pipeline)\n\n\
 If $workflow_dir/verify_errors.log exists, read it FIRST and fix those errors.\n\n\
 Build the full MVP inside $app_dir/:\n\
 - All source code, configs, package files go in $app_dir/\n\
@@ -39,7 +40,7 @@ Build the full MVP inside $app_dir/:\n\
 - Make the UI clean and demoable\n\
 - Include a README with setup instructions\n\
 - Follow the tasks.md dependency order when building\n\n\
-IMPORTANT — Design Direction: Read design.md (or proposal.md) for the Design Direction.\n\
+IMPORTANT — Design Direction: Read spec/spec.md first when present, then use design.md/proposal.md to confirm decisions.\n\
 Use the specified color palette, font pairing, and layout style throughout the UI.\n\
 Do not use default framework colors or generic styling — the spec defines the visual target.\n\
 If a reference design system is named (e.g., 'Linear-inspired', 'Stripe-inspired'),\n\
@@ -119,6 +120,6 @@ match that aesthetic in component styling, spacing, and color usage."
     // Polish -> Design Check -> Exit (only when design passes)
     polish -> design_check
     design_check -> gate_design
-    gate_design -> polish [condition="context.design_ok=false"]
     gate_design -> exit [condition="context.design_ok=true"]
+    gate_design -> polish
 }
