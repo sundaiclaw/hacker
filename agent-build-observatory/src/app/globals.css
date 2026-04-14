@@ -1,0 +1,84 @@
+@import "tailwindcss";
+
+:root {
+  --background: #050a12;
+  --foreground: #ecf2ff;
+  --panel: #0c1422;
+  --panel-strong: #101a2b;
+  --line: rgba(148, 163, 184, 0.16);
+  --font-app-sans: "Aptos", "Segoe UI Variable Text", "Segoe UI", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  --font-app-mono: "JetBrains Mono", "SFMono-Regular", "Cascadia Code", "Menlo", "Consolas", monospace;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-panel: var(--panel);
+  --color-panel-strong: var(--panel-strong);
+  --font-sans: var(--font-app-sans);
+  --font-mono: var(--font-app-mono);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background:
+    radial-gradient(circle at top, rgba(56, 189, 248, 0.12), transparent 24%),
+    radial-gradient(circle at 82% 12%, rgba(34, 197, 94, 0.08), transparent 18%),
+    linear-gradient(180deg, #08101b 0%, #050a12 45%, #04070d 100%);
+  color: var(--foreground);
+  font-family: var(--font-app-sans);
+  letter-spacing: -0.01em;
+}
+
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background-image:
+    linear-gradient(rgba(148, 163, 184, 0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(148, 163, 184, 0.04) 1px, transparent 1px);
+  background-size: 72px 72px;
+  mask-image: linear-gradient(180deg, rgba(0, 0, 0, 0.6), transparent 92%);
+  opacity: 0.4;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+::selection {
+  background: rgba(56, 189, 248, 0.28);
+  color: white;
+}
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(148, 163, 184, 0.28) transparent;
+}
+
+*::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+*::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+  background-color: rgba(148, 163, 184, 0.22);
+}
