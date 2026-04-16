@@ -57,7 +57,7 @@ fix_tests -> run_tests
 ```
 
 Where:
-- `setup_tests` (parallelogram): Install test dependencies if needed (e.g., `pip install pytest-cov`, `bun add -d vitest`)
+- `setup_tests` (parallelogram): Install test dependencies if needed (e.g., `pip install pytest-cov`, `npm install`, `pnpm install`, `yarn install`, `bun install`)
 - `run_tests` (parallelogram): Run the actual test commands. Combine all test types into one script with `|| true` so output is captured even on failure. Include `set -e` only after capturing output.
 - `gate_results` (diamond): Check if tests passed
 - `fix_tests` (box, class="code"): Agent that reads test output and fixes failing tests or implementation code. Set `max_visits=3`.
@@ -65,7 +65,7 @@ Where:
 ### Adapting to the project
 
 - **Python projects**: Use `uv run python -m pytest` with appropriate flags (-v, --tb=short, -x for fail-fast on fix iterations)
-- **Node/Bun projects**: Use `bun test` or `bun run test` or the specific test script from package.json
+- **Node projects**: Detect the package manager from lockfiles (`bun.lock*`, `pnpm-lock.yaml`, `yarn.lock`, `package-lock.json`) and use the matching command or the specific script from `package.json`
 - **Multi-stack projects**: Run all test suites in sequence in one `run_tests` script
 - **Integration tests**: If the project has a separate integration test suite, add it to the run_tests script after unit tests
 - **E2E tests**: Only include if the project has e2e test infrastructure already set up (cypress, playwright). Do not invent e2e tests.
