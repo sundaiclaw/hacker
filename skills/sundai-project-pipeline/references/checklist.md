@@ -26,7 +26,12 @@
 - [ ] Thumbnail added/generated before Fabro
 - [ ] Bot self-like applied and verified before Fabro
 - [ ] GitHub About filled before Fabro (description + homepage=Sundai project URL)
+- [ ] GitHub repo topics/tags filled before Fabro
 - [ ] README already contains Sundai build date/project lines + required run/limitations sections before Fabro
+- [ ] README includes provisional/published links block (repo + Sundai + early demo URL) before Fabro
+- [ ] `.env.example` exists early with known runtime vars before Fabro
+- [ ] early deploy template/script exists before Fabro
+- [ ] Sundai tech/domain tags filled before Fabro when obvious from the idea
 - [ ] OpenSpec artifacts + `spec/spec.md` committed and pushed before Fabro
 - [ ] Project fields updated via cookie-backed API patch after final app deploy (UI fallback only if API blocked, with reason logged)
 - [ ] Edit PATCH preserved existing `participants` (no accidental team wipe)

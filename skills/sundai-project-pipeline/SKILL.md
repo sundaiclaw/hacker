@@ -222,8 +222,8 @@ During execution, emit concise live status updates after each major phase using 
      4. Add/generate the thumbnail early.
      5. Apply the bot's self-like early as part of draft setup, then verify it persisted.
      6. Save and verify the draft, but do **not** publish yet.
-   - **Then sync lightweight GitHub metadata before Fabro starts**:
-     1. Fill the GitHub repo **About** section early: set the repo description and set `homepage` to the Sundai project URL.
+   - **Then sync lightweight GitHub + docs metadata before Fabro starts**:
+     1. Fill the GitHub repo **About** section early: set the repo description, set `homepage` to the Sundai project URL, and add initial repo topics/tags.
      2. Update `README.md` early with the required Sundai lines and basic ship metadata while the build is still pending.
      3. The README must already include:
         - What it does (short description)
@@ -231,9 +231,13 @@ During execution, emit concise live status updates after each major phase using 
         - Limitations / known gaps
         - `Build on Sundai Club on Month D, YYYY`
         - `Sundai Project: <Sundai Project URL>`
+        - a provisional/published links section that at least includes repo URL, Sundai URL, and the early demo URL
      4. Keep the Sundai date line and project URL on separate rendered lines.
-     5. Commit and push these lightweight README/About updates before Fabro starts; do not defer them to the end.
-   - Goal: while Fabro is building, the repo, deploy target, demo URL, and Sundai project should already exist **and the draft should already show description, thumbnail, self-like, GitHub About metadata, and README Sundai info**.
+     5. Add a minimal `.env.example` early with the expected runtime variables (`OPENROUTER_API_KEY`, `OPENROUTER_MODEL`, `OPENROUTER_BASE_URL`, `PORT`, and any app-specific required vars already known).
+     6. Add an early deploy template/script (`scripts/deploy.sh` or an equivalent exact documented command) before Fabro starts so deployment details are not invented late.
+     7. Fill Sundai tech tags and domain tags early when the category is already obvious from the idea.
+     8. Commit and push these lightweight README/About/bootstrap updates before Fabro starts; do not defer them to the end.
+   - Goal: while Fabro is building, the repo, deploy target, demo URL, and Sundai project should already exist **and the draft should already show description, thumbnail, self-like, GitHub About metadata, README Sundai info, tags, and bootstrap docs/env/deploy scaffolding**.
 
 3. **Generate OpenSpec artifacts and hand implementation to Fabro**
    - After the repo/demo URL/Sundai draft exist, make the run **OpenSpec-first**:
@@ -361,8 +365,8 @@ During execution, emit concise live status updates after each major phase using 
    - Never tell the user the Sundai project is finished until this public-page QA passes.
 
 13. **Update GitHub README + lint**
-   - README/About requirements are **front-loaded before Fabro**; this late step is a final audit, not the first time those sections are added.
-   - Ensure README still includes required sections:
+   - README/About/bootstrap-doc requirements are **front-loaded before Fabro**; this late step is a final audit, not the first time those sections are added.
+   - Ensure README still includes required sections, published-links block, and any early bootstrap docs/env/deploy notes added before Fabro:
      - What it does (short description)
      - **How to Run (from zero)** with full local setup steps:
        1) prerequisites
