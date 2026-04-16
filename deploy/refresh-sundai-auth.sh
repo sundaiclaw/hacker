@@ -34,7 +34,7 @@ readonly EX_GITHUB_OAUTH=4        # GitHub OAuth fallback failed
 readonly EX_TOKEN_WRITE=5         # token write / persistence failed
 
 # ── Logging helpers ───────────────────────────────────────────────────
-log_info()  { echo "[$(date -u +%FT%TZ)] [INFO]  $*"; }
+log_info()  { echo "[$(date -u +%FT%TZ)] [INFO]  $*" >&2; }
 log_warn()  { echo "[$(date -u +%FT%TZ)] [WARN]  $*" >&2; }
 log_error() { echo "[$(date -u +%FT%TZ)] [ERROR] $*" >&2; }
 
@@ -401,7 +401,7 @@ parts = token.split('.')
 if len(parts) >= 2:
     payload = parts[1]
     # Fix base64url padding
-    payload += '=' * (4 - len(payload) % 4)
+    payload += '=' * (-len(payload) % 4)
     try:
         data = json.loads(base64.urlsafe_b64decode(payload))
         exp = data.get('exp', 0)
@@ -542,7 +542,7 @@ token = sys.stdin.read().strip()
 parts = token.split('.')
 if len(parts) >= 2:
     payload = parts[1]
-    payload += '=' * (4 - len(payload) % 4)
+    payload += '=' * (-len(payload) % 4)
     try:
         data = json.loads(base64.urlsafe_b64decode(payload))
         exp = data.get('exp', 0)
@@ -559,7 +559,7 @@ else:
       expires_in_seconds="$jwt_info"
       if [ "$expires_in_seconds" -gt 0 ] 2>/dev/null; then
         healthy=true
-        log_info "Session JWT valid, expires in ${expires_in_seconds}s" >&2
+        log_info "Session JWT valid, expires in ${expires_in_seconds}s"
       else
         log_warn "Session JWT expired (${expires_in_seconds}s ago)" >&2
       fi
@@ -567,10 +567,10 @@ else:
       log_warn "Could not decode session JWT" >&2
     fi
   else
-    log_info "No cached session JWT found; checking Clerk credentials..." >&2
+    log_info "No cached session JWT found; checking Clerk credentials..."
     # If we have Clerk creds, that counts as potentially healthy
     if [ -n "${SUNDAI_CLERK_CLIENT:-}" ] && [ -n "${SUNDAI_SESSION_ID:-}" ]; then
-      log_info "Clerk credentials present, can mint on demand" >&2
+      log_info "Clerk credentials present, can mint on demand"
       # Try a quick decode of the __client JWT to see if it's still valid
       local client_exp
       client_exp=$(echo "${SUNDAI_CLERK_CLIENT:-}" | python3 -c "
@@ -579,7 +579,7 @@ token = sys.stdin.read().strip()
 parts = token.split('.')
 if len(parts) >= 2:
     payload = parts[1]
-    payload += '=' * (4 - len(payload) % 4)
+    payload += '=' * (-len(payload) % 4)
     try:
         data = json.loads(base64.urlsafe_b64decode(payload))
         exp = data.get('exp', 0)
@@ -595,7 +595,7 @@ else:
       if [ "$client_exp" -gt 0 ] 2>/dev/null; then
         healthy=true
         expires_in_seconds="$client_exp"
-        log_info "Clerk __client JWT valid, expires in ${client_exp}s" >&2
+        log_info "Clerk __client JWT valid, expires in ${client_exp}s"
       fi
     fi
   fi
