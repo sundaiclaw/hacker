@@ -22,6 +22,7 @@
 - [ ] Early placeholder/minimal deployment executed before Fabro; stable Demo URL captured
 - [ ] Sundai draft created before Fabro (API first; UI fallback only if API blocked, with reason logged)
 - [ ] Draft already filled with early-available fields before Fabro (title, one-liner, team, start date, GitHub URL, early Demo URL)
+- [ ] OpenSpec artifacts + `spec/spec.md` committed and pushed before Fabro
 - [ ] Project fields updated via cookie-backed API patch after final app deploy (UI fallback only if API blocked, with reason logged)
 - [ ] Edit PATCH preserved existing `participants` (no accidental team wipe)
 - [ ] Submit API call sent JSON body `{ "status": "APPROVED" }` (UI fallback only if API blocked, with reason logged)

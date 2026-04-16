@@ -1,5 +1,9 @@
 # sundai-project-pipeline changelog
 
+## v1.28.1 - 2026-04-16
+- Tightened the front-loaded pipeline: after generating/updating OpenSpec artifacts and `spec/spec.md`, commit and push them to GitHub **before** Fabro starts.
+- Updated the checklist so the spec artifacts are visible upstream before the long Fabro run begins.
+
 ## v1.28.0 - 2026-04-12
 - Reordered the pipeline to front-load external setup before Fabro: create/push the repo, provision a stable early demo URL/service, and create the Sundai draft before the long build starts.
 - Added explicit guidance to use a minimal placeholder deployment when needed so the final app can later redeploy onto the same service/demo URL.

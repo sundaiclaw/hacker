@@ -229,19 +229,21 @@ During execution, emit concise live status updates after each major phase using 
      3. Generate the four core artifacts: `proposal.md`, `design.md`, `specs/.../spec.md`, and `tasks.md`.
      4. Keep them concise but real; they should capture product intent, scope, decisions, requirements, and implementation tasks.
      5. If the repo already contains OpenSpec artifacts, update them instead of duplicating them.
+     6. Commit and push the OpenSpec artifacts before Fabro starts.
    - Then hand the implementation to Fabro via the corrected generic-build path:
      1. Write a bridge file at `spec/spec.md` summarizing: project name, what it does, tech stack, AI integration requirements, demo flow, the OpenSpec change name, and the chosen Design Direction.
-     2. Copy the `fabro/` directory and `fabro.toml` from this workspace into the new repo.
-     3. Write `fabro/workflows/generic-build/runs/sundai-ship.toml` with:
+     2. Commit and push `spec/spec.md` together with the OpenSpec artifacts so GitHub reflects the intended build inputs before the long Fabro run starts.
+     3. Copy the `fabro/` directory and `fabro.toml` from this workspace into the new repo.
+     4. Write `fabro/workflows/generic-build/runs/sundai-ship.toml` with:
         - `graph = "../workflow.fabro"`
         - `app_dir = "."`
         - `spec_dir = "openspec"`
         - `workflow_dir = ".workflow"`
-     4. Run: `fabro validate fabro/workflows/generic-build/workflow.fabro`
-     5. Run: `fabro run fabro/workflows/generic-build/runs/sundai-ship.toml --preflight --sandbox local`
-     6. Run: `fabro run fabro/workflows/generic-build/runs/sundai-ship.toml --auto-approve --sandbox local`
-     7. This executes the corrected plan → implement → review → verify pipeline automatically for repo-root or nested-app repos.
-     8. If the repo uses `fabro/workflows/sundai-ship/workflow.fabro`, the added design-skill prompts (`prompts/polish.md` and `prompts/design-check.md`) can use the spec's Design Direction to do an extra polish / design quality pass after a clean build.
+     5. Run: `fabro validate fabro/workflows/generic-build/workflow.fabro`
+     6. Run: `fabro run fabro/workflows/generic-build/runs/sundai-ship.toml --preflight --sandbox local`
+     7. Run: `fabro run fabro/workflows/generic-build/runs/sundai-ship.toml --auto-approve --sandbox local`
+     8. This executes the corrected plan → implement → review → verify pipeline automatically for repo-root or nested-app repos.
+     9. If the repo uses `fabro/workflows/sundai-ship/workflow.fabro`, the added design-skill prompts (`prompts/polish.md` and `prompts/design-check.md`) can use the spec's Design Direction to do an extra polish / design quality pass after a clean build.
    - Preferred implementation pattern:
      - OpenSpec defines the product and requirements.
      - `spec/spec.md` gives Fabro a compact execution brief.
