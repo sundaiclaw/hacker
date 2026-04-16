@@ -222,7 +222,18 @@ During execution, emit concise live status updates after each major phase using 
      4. Add/generate the thumbnail early.
      5. Apply the bot's self-like early as part of draft setup, then verify it persisted.
      6. Save and verify the draft, but do **not** publish yet.
-   - Goal: while Fabro is building, the repo, deploy target, demo URL, and Sundai project should already exist **and the draft should already show description, thumbnail, and self-like**.
+   - **Then sync lightweight GitHub metadata before Fabro starts**:
+     1. Fill the GitHub repo **About** section early: set the repo description and set `homepage` to the Sundai project URL.
+     2. Update `README.md` early with the required Sundai lines and basic ship metadata while the build is still pending.
+     3. The README must already include:
+        - What it does (short description)
+        - How to Run (from zero): prerequisites, `git clone`, `cd`, dependency install, run command, local URL
+        - Limitations / known gaps
+        - `Build on Sundai Club on Month D, YYYY`
+        - `Sundai Project: <Sundai Project URL>`
+     4. Keep the Sundai date line and project URL on separate rendered lines.
+     5. Commit and push these lightweight README/About updates before Fabro starts; do not defer them to the end.
+   - Goal: while Fabro is building, the repo, deploy target, demo URL, and Sundai project should already exist **and the draft should already show description, thumbnail, self-like, GitHub About metadata, and README Sundai info**.
 
 3. **Generate OpenSpec artifacts and hand implementation to Fabro**
    - After the repo/demo URL/Sundai draft exist, make the run **OpenSpec-first**:
@@ -323,8 +334,7 @@ During execution, emit concise live status updates after each major phase using 
 10. **Immediate link sync (mandatory, before health wait)**
    - As soon as a deploy URL exists, update external cards/links first:
      - Set Sundai `Demo URL` to deployed URL (API-first), save + verify persisted.
-     - Sync GitHub About (description + homepage=Sundai project URL), verify saved.
-     - Ensure README contains Sundai date/project link lines and push.
+     - Re-verify GitHub About and README still reflect the correct Sundai/live links after final deploy; patch only if something changed.
    - Report these links immediately in progress updates.
 
 11. **One-click demo test (mandatory, runs later)**
@@ -351,7 +361,8 @@ During execution, emit concise live status updates after each major phase using 
    - Never tell the user the Sundai project is finished until this public-page QA passes.
 
 13. **Update GitHub README + lint**
-   - Ensure README includes required sections:
+   - README/About requirements are **front-loaded before Fabro**; this late step is a final audit, not the first time those sections are added.
+   - Ensure README still includes required sections:
      - What it does (short description)
      - **How to Run (from zero)** with full local setup steps:
        1) prerequisites
@@ -361,7 +372,7 @@ During execution, emit concise live status updates after each major phase using 
        5) run command
        6) local URL to open
      - Limitations / known gaps
-   - Add two separate lines to `README.md` (create section if needed):
+   - Ensure the two separate Sundai lines are still present in `README.md`:
      - `Build on Sundai Club on Month D, YYYY`
      - `Sundai Project: <Sundai Project URL>`
    - Date must be human-readable (example: `March 8, 2026`), not ISO format.

@@ -1,5 +1,10 @@
 # sundai-project-pipeline changelog
 
+## v1.28.3 - 2026-04-16
+- Moved GitHub About + Sundai README metadata into the pre-Fabro bootstrap phase: repo description, homepage=Sundai URL, and the required README Sundai/date/run/limitations sections must be filled before the long build starts.
+- Reframed the later README/About step as a final audit/re-verify pass instead of the first time those fields are added.
+- Expanded the checklist so GitHub About and README Sundai info are verified before Fabro.
+
 ## v1.28.2 - 2026-04-16
 - Tightened the early Sundai-draft phase again: before Fabro starts, the draft must already have full description, thumbnail, and the bot's self-like — not just title/team/URLs.
 - Clarified that the final Sundai patch step should mostly update changed details after deploy rather than creating the first visible description/thumbnail/like.

@@ -25,6 +25,8 @@
 - [ ] Full description filled before Fabro
 - [ ] Thumbnail added/generated before Fabro
 - [ ] Bot self-like applied and verified before Fabro
+- [ ] GitHub About filled before Fabro (description + homepage=Sundai project URL)
+- [ ] README already contains Sundai build date/project lines + required run/limitations sections before Fabro
 - [ ] OpenSpec artifacts + `spec/spec.md` committed and pushed before Fabro
 - [ ] Project fields updated via cookie-backed API patch after final app deploy (UI fallback only if API blocked, with reason logged)
 - [ ] Edit PATCH preserved existing `participants` (no accidental team wipe)
