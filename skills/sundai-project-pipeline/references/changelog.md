@@ -1,5 +1,11 @@
 # sundai-project-pipeline changelog
 
+## v1.28.0 - 2026-04-12
+- Reordered the pipeline to front-load external setup before Fabro: create/push the repo, provision a stable early demo URL/service, and create the Sundai draft before the long build starts.
+- Added explicit guidance to use a minimal placeholder deployment when needed so the final app can later redeploy onto the same service/demo URL.
+- Split the old build step into: bootstrap external surfaces first → OpenSpec/Fabro build → promote/redeploy final app → patch final Sundai details.
+- Updated the checklist to require early repo/deploy/draft bootstrap before Fabro and final redeploy onto the pre-created service.
+
 ## v1.27.0 - 2026-04-12
 - Added a hard completion gate to the Sundai pipeline skill: never report success just because create/save/submit succeeded.
 - Finalization now requires reloading the **public** project page and visibly verifying GitHub link, Demo link, non-null full description, team member `vyahhi`, and thumbnail.

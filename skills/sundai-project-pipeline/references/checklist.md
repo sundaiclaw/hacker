@@ -18,10 +18,11 @@
 - [ ] AI is user-facing and central to product value (not hidden helper endpoint)
 - [ ] AI output is rendered for humans (markdown/rendered rich text where applicable), not plain raw dump
 - [ ] AI integration uses OpenRouter free model via env vars (`OPENROUTER_API_KEY`, `OPENROUTER_BASE_URL`, `OPENROUTER_MODEL`)
-- [ ] GitHub repo exists and is pushed (new repo for this run)
-- [ ] Early deployment executed immediately after push; Demo URL captured
-- [ ] Project create executed via cookie-backed API (UI fallback only if API blocked, with reason logged)
-- [ ] Project fields updated via cookie-backed API patch (UI fallback only if API blocked, with reason logged)
+- [ ] GitHub repo exists and is pushed early (new repo for this run)
+- [ ] Early placeholder/minimal deployment executed before Fabro; stable Demo URL captured
+- [ ] Sundai draft created before Fabro (API first; UI fallback only if API blocked, with reason logged)
+- [ ] Draft already filled with early-available fields before Fabro (title, one-liner, team, start date, GitHub URL, early Demo URL)
+- [ ] Project fields updated via cookie-backed API patch after final app deploy (UI fallback only if API blocked, with reason logged)
 - [ ] Edit PATCH preserved existing `participants` (no accidental team wipe)
 - [ ] Submit API call sent JSON body `{ "status": "APPROVED" }` (UI fallback only if API blocked, with reason logged)
 - [ ] GitHub URL persisted (API readback or UI reload verify)
@@ -49,6 +50,7 @@
 - [ ] Public page visibly shows thumbnail
 - [ ] Completion was reported only after the public-page checks passed
 - [ ] Liked own project and verified like count/state
+- [ ] Final app redeployed onto the pre-created service / same Demo URL when possible
 - [ ] Deployment completed and URL captured
 - [ ] Immediate link sync completed before health wait:
   - [ ] Sundai Demo URL updated + persisted

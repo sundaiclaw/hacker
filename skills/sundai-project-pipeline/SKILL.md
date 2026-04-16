@@ -13,13 +13,16 @@ Execute a complete Sundai shipping run with no skipped steps. Default to this pi
 - Before implementation, create OpenSpec artifacts for the project idea and use them to drive the build.
 - Required sequence for new Sundai projects:
   1. ideate and choose the project
-  2. create the GitHub repo
-  3. initialize or copy OpenSpec into the repo
-  4. create an OpenSpec change using the project slug/name
-  5. write the core artifacts: `proposal.md`, `design.md`, `specs/.../spec.md`, `tasks.md`
-  6. summarize the implementation target into `spec/spec.md` for Fabro
-  7. write a repo-local Fabro run config for the corrected generic-build workflow (`app_dir="."`, `spec_dir="openspec"`, `workflow_dir=".workflow"`)
-  8. run Fabro validate → preflight → full execution from those specs
+  2. create the GitHub repo and push an initial scaffold immediately
+  3. provision a stable early demo URL/service (deploy a minimal placeholder app first if needed)
+  4. create the Sundai draft early and fill every field that does not depend on the final Fabro output
+  5. initialize or copy OpenSpec into the repo
+  6. create an OpenSpec change using the project slug/name
+  7. write the core artifacts: `proposal.md`, `design.md`, `specs/.../spec.md`, `tasks.md`
+  8. summarize the implementation target into `spec/spec.md` for Fabro
+  9. write a repo-local Fabro run config for the corrected generic-build workflow (`app_dir="."`, `spec_dir="openspec"`, `workflow_dir=".workflow"`)
+  10. run Fabro validate → preflight → full execution from those specs
+  11. promote the Fabro result, redeploy onto the already-created demo URL/service, then finish final publish/public-page QA
 - Do **not** skip OpenSpec just because the project is small. The Sundai pipeline should leave behind reusable product/spec artifacts as well as code.
 - Default assumption: many Sundai repos are repo-root apps. The Fabro path must support in-place implementation when `app_dir="."`; do not assume a fresh nested app directory.
 - If OpenSpec tooling fails or the repo cannot be initialized cleanly, report the blocker, then fall back to the previous direct-Fabro/manual path so the shipping run can still complete.
@@ -195,15 +198,32 @@ During execution, emit concise live status updates after each major phase using 
    - Title ≤32 chars and description ≤100 chars are hard limits enforced by Sundai.
    - Design Direction must reference a specific design system and palette — do not leave generic or "TBD". The Fabro build and polish steps use these values to produce polished UI.
 
-2. **Create NEW GitHub repo + generate OpenSpec artifacts + build MVP via Fabro**
+2. **Create NEW GitHub repo + bootstrap all external surfaces first**
    - Create a **new public GitHub repo** for the project (no reusing old project repos), but do **not** try to `gh repo create --push` from a truly empty repo.
    - First create a minimal scaffold locally (for example: `README.md` and `.gitignore`), make an initial commit, and only then create/push the repo.
    - Recommended sequence:
      1. Initialize the local repo and write a minimal `README.md` + `.gitignore`.
      2. Commit the initial scaffold locally.
      3. Create the GitHub repo and push that initial commit.
-     4. Then continue building inside the repo.
-   - After the repo exists, make the run **OpenSpec-first**:
+     4. Capture the public repo URL immediately.
+   - **Then provision the demo surface before Fabro starts**:
+     1. Create a minimal placeholder app/shell if the repo has no deployable artifact yet.
+     2. Deploy that placeholder immediately using **GCP Cloud Run by default** (static-only repos may use GitHub Pages when Cloud Run is unnecessary).
+     3. This early deploy is meant to reserve a stable demo URL/service while Fabro is still building the real app.
+     4. For any `gcloud` deploy/build command, always pass explicit flags:
+        - `--project "$GCP_PROJECT_ID"`
+        - `--region "$GCP_REGION"`
+     5. Do not rely on the VM's default `gcloud` project/region config for deploys.
+     6. Capture the live early `Demo URL` as soon as it exists.
+   - **Then create the Sundai draft before Fabro starts**:
+     1. Reuse the authenticated Sundai browser/API session.
+     2. Create the project draft immediately with title, one-line description, launch lead, team member **vyahhi**, start date, GitHub URL, and the early Demo URL.
+     3. Add/generate the thumbnail early when possible.
+     4. Save and verify the draft, but do **not** publish yet.
+   - Goal: while Fabro is building, the repo, deploy target, demo URL, and Sundai project should already exist.
+
+3. **Generate OpenSpec artifacts and hand implementation to Fabro**
+   - After the repo/demo URL/Sundai draft exist, make the run **OpenSpec-first**:
      1. Initialize OpenSpec in the repo if needed.
      2. Create a change whose kebab-case name matches the project slug/title.
      3. Generate the four core artifacts: `proposal.md`, `design.md`, `specs/.../spec.md`, and `tasks.md`.
@@ -237,37 +257,21 @@ During execution, emit concise live status updates after each major phase using 
    - AI must be **user-facing and core to value** (not hidden test endpoint only).
    - Render AI responses in a human-friendly UI format (markdown/rendered text), not raw/plain unformatted dumps.
    - Reject ideas that can be delivered equivalently without AI.
-   - Push code and verify repo URL resolves publicly.
-   - Capture repo URL for Sundai `GitHub URL` field.
 
-3. **Deploy early (mandatory, after build/push)**
-   - Deploy immediately after GitHub push using **GCP Cloud Run by default**.
-   - Static-only projects may use GitHub Pages when Cloud Run is unnecessary.
-   - If no deploy target/service exists for the repo, create one first.
-   - For any `gcloud` deploy/build command, always pass explicit flags:
-     - `--project "$GCP_PROJECT_ID"`
-     - `--region "$GCP_REGION"`
-   - Do not rely on the VM's default `gcloud` project/region config for deploys.
-   - Capture live `Demo URL` and deployment id/reference as early as possible.
-   - Do **not** block here on full health checks; health validation runs later.
+4. **Promote the Fabro result and redeploy onto the pre-created service**
+   - After Fabro finishes successfully, promote/copy the generated app into the repo and push.
+   - Redeploy the real app onto the **same existing service/demo URL** created earlier whenever possible.
+   - Capture the final deployed revision/reference.
+   - Do **not** create the deploy target late unless the early bootstrap failed and you explicitly log that fallback.
 
-4. **Create Sundai project (cookie-backed API mandatory-first)**
-   - Reuse authenticated Sundai browser session (cookies) for API calls.
-   - If `SUNDAI_COOKIE_HEADER` exists in `.env.sundai`, use it before scraping/deriving cookies from the browser profile.
-   - Start with API create by default; do not start with UI clicks unless API path is blocked.
-   - Include: `Project Title`, `Brief Description`, `Launch Lead`, and team member **vyahhi** (Nikolay Vyahhi).
-   - For API create, send `members` as structured objects (`id`, `role`) — not usernames/handles.
-   - Capture `projectId` and canonical project URL.
-   - If API create fails after session refresh/retry, use UI create flow as fallback.
-
-5. **Edit details (cookie-backed API mandatory-first)**
+5. **Patch final Sundai details after the real app is live**
    - Use API update for project fields by default using authenticated browser session cookies.
    - Prefer `SUNDAI_COOKIE_HEADER` when present; only derive cookies from the browser profile if the env header is absent or expired.
    - Read current project first and preserve `participants` in PATCH payload unless intentionally changing team.
    - Do not send empty `participants` by default.
-   - Fill at minimum:
+   - Update/persist at minimum:
      - GitHub URL
-     - Demo URL (once deploy is live)
+     - Demo URL (final live app URL; often same as the early placeholder URL)
      - One Sentence Description
      - Full Description
      - Start Date
