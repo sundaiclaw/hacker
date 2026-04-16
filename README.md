@@ -36,3 +36,4 @@ sudo systemctl start openclaw
 ```
 
 See [`deploy/openclaw-vm.md`](deploy/openclaw-vm.md) for full details.
+For future debugging, use `sundaiclaw@gmail.com` with project `project-3930b9ab-6eae-4b3a-959`, scoped per command via `CLOUDSDK_CORE_ACCOUNT`, `CLOUDSDK_CORE_PROJECT`, or explicit `gcloud --account/--project` flags so local defaults stay unchanged.

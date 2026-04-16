@@ -86,8 +86,31 @@ This repo mirrors the VM-hosted OpenClaw deployment used for Sundai shipping. Th
 
 ## Active identities
 
+- Recommended operator `gcloud` account: `sundaiclaw@gmail.com`
+- Recommended operator project for this stack: `project-3930b9ab-6eae-4b3a-959`
 - OpenClaw VM runtime GCP identity: `859414203684-compute@developer.gserviceaccount.com`
 - GitHub CLI user: `sundaiclaw`
+
+## Operator gcloud usage
+
+Use explicit account/project scoping for one-off commands so local `gcloud` defaults stay unchanged:
+
+```bash
+CLOUDSDK_CORE_ACCOUNT=sundaiclaw@gmail.com \
+CLOUDSDK_CORE_PROJECT=project-3930b9ab-6eae-4b3a-959 \
+gcloud compute instances list --filter='name=openclaw-vm'
+```
+
+Equivalent flag form:
+
+```bash
+gcloud compute ssh openclaw-vm \
+  --account=sundaiclaw@gmail.com \
+  --project=project-3930b9ab-6eae-4b3a-959 \
+  --zone=us-central1-a
+```
+
+This avoids changing `gcloud config set account ...` or `gcloud config set project ...` in a shared local shell.
 
 ## Verified project access
 
