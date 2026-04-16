@@ -15,7 +15,7 @@ Execute a complete Sundai shipping run with no skipped steps. Default to this pi
   1. ideate and choose the project
   2. create the GitHub repo and push an initial scaffold immediately
   3. provision a stable early demo URL/service (deploy a minimal placeholder app first if needed)
-  4. create the Sundai draft early and fill every field that does not depend on the final Fabro output
+  4. create the Sundai draft early and make it look publicly complete before Fabro starts
   5. initialize or copy OpenSpec into the repo
   6. create an OpenSpec change using the project slug/name
   7. write the core artifacts: `proposal.md`, `design.md`, `specs/.../spec.md`, `tasks.md`
@@ -218,9 +218,11 @@ During execution, emit concise live status updates after each major phase using 
    - **Then create the Sundai draft before Fabro starts**:
      1. Reuse the authenticated Sundai browser/API session.
      2. Create the project draft immediately with title, one-line description, launch lead, team member **vyahhi**, start date, GitHub URL, and the early Demo URL.
-     3. Add/generate the thumbnail early when possible.
-     4. Save and verify the draft, but do **not** publish yet.
-   - Goal: while Fabro is building, the repo, deploy target, demo URL, and Sundai project should already exist.
+     3. Immediately fill the **full description** using the already-known idea/spec seed; do not leave the draft looking empty while Fabro runs.
+     4. Add/generate the thumbnail early.
+     5. Apply the bot's self-like early as part of draft setup, then verify it persisted.
+     6. Save and verify the draft, but do **not** publish yet.
+   - Goal: while Fabro is building, the repo, deploy target, demo URL, and Sundai project should already exist **and the draft should already show description, thumbnail, and self-like**.
 
 3. **Generate OpenSpec artifacts and hand implementation to Fabro**
    - After the repo/demo URL/Sundai draft exist, make the run **OpenSpec-first**:
@@ -268,6 +270,7 @@ During execution, emit concise live status updates after each major phase using 
 
 5. **Patch final Sundai details after the real app is live**
    - Use API update for project fields by default using authenticated browser session cookies.
+   - Treat the early draft as already publicly presentable; this late step should mostly patch changed links/body details, not add the first description/thumbnail/like from scratch.
    - Prefer `SUNDAI_COOKIE_HEADER` when present; only derive cookies from the browser profile if the env header is absent or expired.
    - Read current project first and preserve `participants` in PATCH payload unless intentionally changing team.
    - Do not send empty `participants` by default.

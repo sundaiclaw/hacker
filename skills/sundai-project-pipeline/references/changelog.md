@@ -1,5 +1,10 @@
 # sundai-project-pipeline changelog
 
+## v1.28.2 - 2026-04-16
+- Tightened the early Sundai-draft phase again: before Fabro starts, the draft must already have full description, thumbnail, and the bot's self-like — not just title/team/URLs.
+- Clarified that the final Sundai patch step should mostly update changed details after deploy rather than creating the first visible description/thumbnail/like.
+- Expanded the checklist to require description/thumbnail/self-like before the long Fabro run begins.
+
 ## v1.28.1 - 2026-04-16
 - Tightened the front-loaded pipeline: after generating/updating OpenSpec artifacts and `spec/spec.md`, commit and push them to GitHub **before** Fabro starts.
 - Updated the checklist so the spec artifacts are visible upstream before the long Fabro run begins.
