@@ -8,10 +8,12 @@ import {
   insertEventRecord,
   listEventRows,
   listRunRows,
+  replaceRunEvents,
   type EventRow,
+  type RunRecordInput,
   type RunRow,
 } from "@/lib/observability-db";
-import { getOpenClawRuntimeDashboardData, getOpenClawRuntimeRunDetail } from "@/lib/openclaw-runtime";
+import { collectOpenClawRuntime, type RuntimeCollection } from "@/lib/openclaw-runtime";
 import {
   observabilityEventInputSchema,
   observabilityEventSchema,
@@ -33,6 +35,26 @@ export type RunSummary = {
   updatedAt: string;
   eventCount: number;
   source: string;
+};
+
+export type DashboardData = {
+  runs: RunSummary[];
+  events: ObservatoryEvent[];
+  changedFiles: string[];
+  summary: {
+    totalRuns: number;
+    activeRuns: number;
+    completedRuns: number;
+    failedRuns: number;
+  };
+  source: string;
+  storage: "postgres" | "sqlite";
+};
+
+export type RunDetail = {
+  run: RunSummary;
+  events: ObservatoryEvent[];
+  changedFiles: string[];
 };
 
 const dataDir = path.join(process.cwd(), "data", "observability");
@@ -174,15 +196,13 @@ export async function appendEvent(input: ObservatoryEventInput) {
   return event;
 }
 
-export async function getDashboardData() {
-  const runtimeData = await getOpenClawRuntimeDashboardData();
-  if (runtimeData) {
-    return runtimeData;
-  }
-
+export async function getDashboardData(): Promise<DashboardData> {
   await ensureObservabilityStore();
+  const runtimeCollection = await syncRuntimeCollection();
+  const runtimeCount = await countEventsBySource("runtime");
   const liveCount = await countEventsBySource("live");
   const activeSource = liveCount > 0 ? "live" : "demo";
+  const sourceLabel = runtimeCount > 0 ? "runtime" : activeSource;
 
   const runs = (await listRunRows(activeSource)).map(mapRunRow);
   const events = (await listEventRows(activeSource, 20)).map(mapEventRow);
@@ -190,27 +210,25 @@ export async function getDashboardData() {
   return {
     runs,
     events,
-    changedFiles: trackedFiles,
+    changedFiles: runtimeCount > 0 ? mergeChangedFiles(runtimeCollection?.changedFiles) : trackedFiles,
     summary: {
       totalRuns: runs.length,
       activeRuns: runs.filter((run) => !["done", "failed"].includes(run.status)).length,
       completedRuns: runs.filter((run) => run.status === "done").length,
       failedRuns: runs.filter((run) => run.status === "failed").length,
     },
-    source: activeSource,
+    source: sourceLabel,
     storage: hasExternalDatabase() ? "postgres" : "sqlite",
   };
 }
 
-export async function getRunDetail(runId: string) {
-  const runtimeDetail = await getOpenClawRuntimeRunDetail(runId);
-  if (runtimeDetail) {
-    return runtimeDetail;
-  }
-
+export async function getRunDetail(runId: string): Promise<RunDetail | null> {
   await ensureObservabilityStore();
-  const data = await getDashboardData();
-  const run = data.runs.find((item) => item.id === runId);
+  const runtimeCollection = await syncRuntimeCollection();
+  const liveCount = await countEventsBySource("live");
+  const activeSource = liveCount > 0 ? "live" : "demo";
+  const runs = (await listRunRows(activeSource)).map(mapRunRow);
+  const run = runs.find((item) => item.id === runId);
 
   if (!run) return null;
 
@@ -219,8 +237,31 @@ export async function getRunDetail(runId: string) {
   return {
     run,
     events,
-    changedFiles: trackedFiles,
+    changedFiles: run.source === "runtime" ? mergeChangedFiles(runtimeCollection?.changedFiles) : trackedFiles,
   };
+}
+
+async function syncRuntimeCollection(): Promise<RuntimeCollection | null> {
+  const runtime = await collectOpenClawRuntime();
+  if (!runtime) return null;
+
+  for (const snapshot of runtime.runs) {
+    const runRecord: RunRecordInput = {
+      id: snapshot.run.id,
+      source: snapshot.run.source,
+      parentRunId: snapshot.run.parentRunId,
+      task: snapshot.run.task,
+      status: snapshot.run.status,
+      stage: snapshot.run.stage,
+      owner: snapshot.run.owner,
+      startedAt: snapshot.run.startedAt,
+      updatedAt: snapshot.run.updatedAt,
+      eventCount: snapshot.events.length,
+    };
+    await replaceRunEvents(runRecord, snapshot.events);
+  }
+
+  return runtime;
 }
 
 function mapRunRow(row: RunRow): RunSummary {
@@ -253,4 +294,8 @@ function mapEventRow(row: EventRow): ObservatoryEvent {
     ts: new Date(String(row.ts)).toISOString(),
     source: row.source ? String(row.source) : undefined,
   });
+}
+
+function mergeChangedFiles(runtimeFiles?: string[]) {
+  return [...new Set([...(runtimeFiles ?? []), ...trackedFiles])];
 }
