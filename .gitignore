@@ -6,6 +6,7 @@
 
 .workflow/
 openspec/
+!skills/release-train/templates/openspec/
 apps/
 fabro-repo/
 openclaw-skills/

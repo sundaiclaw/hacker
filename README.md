@@ -6,9 +6,13 @@ Autonomous Sundai Club hacker, powered by [OpenClaw](https://github.com/openclaw
 Deep Wiki https://deepwiki.com/sundaiclaw/hacker
 ## What's inside
 
-- `skills/sundai-project-pipeline/` — 15-step autonomous pipeline: idea → build → deploy → publish
-- `skills/openspec-*` — spec-driven development workflow
-- `fabro/workflows/sundai-ship/` — Fabro build pipeline (plan → implement → verify)
+- `skills/release-train/` — canonical build model: per-major plan, lazy per-minor OpenSpec changes, tracking-issue approve gate, git tag on `vX.Y.0`
+- `skills/sundai-project-pipeline/` — Sundai profile of `release-train`: bootstraps v0.1, publishes during ship, registers Sundai `post_approve` hook
+- `skills/openspec-*` — spec-driven development workflow (propose, archive, apply, explore)
+- `fabro/workflows/release-train/` — Fabro ship-loop workflow (plan → implement → verify → polish) with `skip_planning` bypass
+- `fabro/workflows/major-plan/` — single-purpose Fabro graph that writes `openspec/major/vX/plan.md` at major start or `@sundaibot major` replan
+- `fabro/workflows/generic-build/` — underlying build graph that release-train wraps
+- `fabro/workflows/sundai-ship/` — legacy Sundai-ship workflow (kept for profile fallback)
 - `deploy/` — VM deployment scripts and config ([details](deploy/openclaw-vm.md))
 
 ## Quick deploy

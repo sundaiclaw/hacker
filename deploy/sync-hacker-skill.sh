@@ -22,4 +22,9 @@ for f in checklist.md ai-endpoint.md sundai-api-mode.md changelog.md design-syst
   ln -sfn "$REFS_SRC/$f" "$REFS_LINK/$f"
 done
 
+RT_REFS_SRC=$REPO/skills/release-train/references
+for f in major-plan-template.md issue-template.md hooks-contract.md; do
+  ln -sfn "$RT_REFS_SRC/$f" "$REFS_LINK/$f"
+done
+
 echo "synced_hacker_repo=$(git -C "$REPO" rev-parse --short HEAD)"

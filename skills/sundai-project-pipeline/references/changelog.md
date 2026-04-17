@@ -1,5 +1,13 @@
 # sundai-project-pipeline changelog
 
+## v1.29.0 - 2026-04-17
+- Reframed the skill as the **Sundai profile of `skills/release-train/`**: architectural-position diagram, explicit profile overrides section, inheritance of release-train invariants.
+- Bootstrap now runs `major_plan(v0)` first (writing `openspec/major/v0/plan.md` via `fabro/workflows/major-plan/`) before authoring `openspec/changes/v0.1/`. OpenSpec change names move from project-slug to `v0.1` convention.
+- Step 3 now points Fabro at `fabro/workflows/release-train/workflow.fabro` with `release_version="v0.1"` and `spec_dir="openspec/changes/v0.1"`; the old `generic-build` run stays as the underlying graph the release-train wrapper calls into.
+- Added Step 16 "Open v0.1 tracking issue (release-train tag gate)" — renders acceptance criteria from `openspec/changes/v0.1/specs/` into the issue body from `skills/release-train/references/issue-template.md`. Step 15 explicitly reports "awaiting `@sundaibot approve` for v0.1.0 tag."
+- Preserved publish-during-ship (Step 8 now labeled profile override) so the Sundai project card still ends APPROVED on the public site at the end of the autonomous turn. Git tag and openspec archive still gated by `@sundaibot approve`.
+- Moved post-tag Sundai hygiene (final link sync, self-like, public-page QA) into `scripts/release/hooks/post_approve.sh` — Sundai target repos overlay `post_approve.sundai.sh` from the release-train templates. Step 12 remains the authoritative description of what that hook verifies.
+
 ## v1.28.4 - 2026-04-16
 - Expanded the pre-Fabro frontload phase again: GitHub repo topics, README provisional links block, `.env.example`, deploy template/script, and Sundai tech/domain tags must now be set before the long build starts when they are already knowable.
 - Clarified that late README/doc steps are only final audits/re-verification of the front-loaded bootstrap materials.

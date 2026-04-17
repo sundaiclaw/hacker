@@ -8,21 +8,44 @@ description: End-to-end Sundai Club project shipping workflow from idea to OpenS
 ## Overview
 Execute a complete Sundai shipping run with no skipped steps. Default to this pipeline for any Sundai project request unless the user explicitly asks for a partial action.
 
+## Sundai profile of release-train (read first)
+
+This skill is the **Sundai profile** of the canonical [`skills/release-train/`](../release-train/SKILL.md) build model. Inherit every invariant from release-train; the overrides below exist because Sundai has operational needs the generic train does not.
+
+**Architectural position:**
+
+```
+release-train            ← canonical (generic, major plan + lazy minors + tag gate)
+      ^
+      |
+sundai-project-pipeline  ← this skill (bootstrap v0.1, publish during ship, Sundai hooks)
+```
+
+**Profile overrides applied below:**
+
+- **Bootstrap** — before the first Fabro build of a new Sundai project, invoke `major_plan(v0)` to write `openspec/major/v0/plan.md`, then author the first slice as `openspec/changes/v0.1/` (not as `openspec/changes/<project-slug>/`). The Phase-5 ideation output feeds both the major plan and the v0.1 spec.
+- **Publish during ship** — the generic rule is "tag is the public milestone." Sundai inverts that: the Sundai project card PUBLISHES (APPROVED) during Steps 8–12 of this pipeline so drafts stay visible on the public site and match current operator expectations. Git tag and openspec archive for `v0.1.0` still require `@sundaibot approve` after the tracking-issue checklist passes.
+- **Tracking issue after ship** — after Step 15 (autonomous turn ends), open the `v0.1` tracking issue using [`skills/release-train/references/issue-template.md`](../release-train/references/issue-template.md), run preview health, **do not** tag. Tag happens later via the release-train `finalize.sh` on `@sundaibot approve`.
+- **Post-tag Sundai hygiene** — the final link sync / self-like / public-page QA now runs from `scripts/release/hooks/post_approve.sh` in the target repo (Sundai profile copies [`skills/release-train/templates/scripts/release/hooks/post_approve.sundai.sh`](../release-train/templates/scripts/release/hooks/post_approve.sundai.sh) into place). Step 12 still describes *what* the hook does; the hook is the automated enforcement that runs again after tag.
+
+Everything else in this skill — ideation phases, API-first rules, fallback flows, `.env.sundai` auth discipline, progress reporting format — is Sundai-specific operational knowledge and is NOT duplicated in the generic release-train skill.
+
 ## OpenSpec + Fabro rule (mandatory)
-- Sundai builds are now **spec-driven by default**.
-- Before implementation, create OpenSpec artifacts for the project idea and use them to drive the build.
+- Sundai builds are **spec-driven by default** and run through the **release-train** ship loop.
+- Before implementation, write the `v0` major plan and the `v0.1` minor slice, then hand off to Fabro's release-train workflow.
 - Required sequence for new Sundai projects:
   1. ideate and choose the project
   2. create the GitHub repo and push an initial scaffold immediately
   3. provision a stable early demo URL/service (deploy a minimal placeholder app first if needed)
   4. create the Sundai draft early and make it look publicly complete before Fabro starts
   5. initialize or copy OpenSpec into the repo
-  6. create an OpenSpec change using the project slug/name
-  7. write the core artifacts: `proposal.md`, `design.md`, `specs/.../spec.md`, `tasks.md`
-  8. summarize the implementation target into `spec/spec.md` for Fabro
-  9. write a repo-local Fabro run config for the corrected generic-build workflow (`app_dir="."`, `spec_dir="openspec"`, `workflow_dir=".workflow"`)
-  10. run Fabro validate → preflight → full execution from those specs
-  11. promote the Fabro result, redeploy onto the already-created demo URL/service, then finish final publish/public-page QA
+  6. invoke `major_plan(v0)` (via `fabro/workflows/major-plan/`) to write `openspec/major/v0/plan.md`
+  7. author `openspec/changes/v0.1/` with `proposal.md`, `design.md`, `specs/.../spec.md`, `tasks.md` — this is the first `minor_spec` run
+  8. copy `skills/release-train/templates/` into the target repo (`ROADMAP.md`, `scripts/release/*`, hook stubs; overlay `post_approve.sundai.sh` → `post_approve.sh`)
+  9. summarize the implementation target into `spec/spec.md` for Fabro
+  10. write a repo-local Fabro run config for the release-train workflow (`release_version="v0.1"`, `app_dir="."`, `spec_dir="openspec/changes/v0.1"`, `workflow_dir=".workflow"`)
+  11. run Fabro validate → preflight → full execution from those specs
+  12. promote the Fabro result, redeploy onto the already-created demo URL/service, finish final publish/public-page QA, open the v0.1 tracking issue, and stop (do not tag)
 - Do **not** skip OpenSpec just because the project is small. The Sundai pipeline should leave behind reusable product/spec artifacts as well as code.
 - Default assumption: many Sundai repos are repo-root apps. The Fabro path must support in-place implementation when `app_dir="."`; do not assume a fresh nested app directory.
 - If OpenSpec tooling fails or the repo cannot be initialized cleanly, report the blocker, then fall back to the previous direct-Fabro/manual path so the shipping run can still complete.
@@ -239,34 +262,38 @@ During execution, emit concise live status updates after each major phase using 
      8. Commit and push these lightweight README/About/bootstrap updates before Fabro starts; do not defer them to the end.
    - Goal: while Fabro is building, the repo, deploy target, demo URL, and Sundai project should already exist **and the draft should already show description, thumbnail, self-like, GitHub About metadata, README Sundai info, tags, and bootstrap docs/env/deploy scaffolding**.
 
-3. **Generate OpenSpec artifacts and hand implementation to Fabro**
-   - After the repo/demo URL/Sundai draft exist, make the run **OpenSpec-first**:
+3. **Write the v0 major plan, author the v0.1 change, then hand implementation to Fabro via the release-train workflow**
+   - After the repo/demo URL/Sundai draft exist, run the release-train bootstrap (major plan first, then lazy first-minor spec):
      1. Initialize OpenSpec in the repo if needed.
-     2. Create a change whose kebab-case name matches the project slug/title.
-     3. Generate the four core artifacts: `proposal.md`, `design.md`, `specs/.../spec.md`, and `tasks.md`.
-     4. Keep them concise but real; they should capture product intent, scope, decisions, requirements, and implementation tasks.
-     5. If the repo already contains OpenSpec artifacts, update them instead of duplicating them.
-     6. Commit and push the OpenSpec artifacts before Fabro starts.
-   - Then hand the implementation to Fabro via the corrected generic-build path:
-     1. Write a bridge file at `spec/spec.md` summarizing: project name, what it does, tech stack, AI integration requirements, demo flow, the OpenSpec change name, and the chosen Design Direction.
+     2. **Run `major_plan(v0)` first** — invoke `fabro/workflows/major-plan/` to write `openspec/major/v0/plan.md`. Use [`skills/release-train/references/major-plan-template.md`](../release-train/references/major-plan-template.md) for shape. Goals/non-goals/risks should reflect the Phase-5 ideation output; the minor-slice table should start with `v0.1` as the active row and include any follow-up minors the operator already envisions.
+     3. **Then author `openspec/changes/v0.1/`** — this is the first `minor_spec` run. Generate the four core artifacts: `proposal.md`, `design.md`, `specs/.../spec.md`, and `tasks.md`. Keep them concise but real; they should capture product intent, scope, decisions, requirements, and implementation tasks.
+     4. If the repo already contains OpenSpec artifacts under the old project-slug layout, migrate them into `openspec/changes/v0.1/` instead of duplicating them.
+     5. Copy release-train templates into the repo: [`skills/release-train/templates/ROADMAP.md`](../release-train/templates/ROADMAP.md), [`skills/release-train/templates/scripts/release/*`](../release-train/templates/scripts/release/), and the hook stubs. For Sundai repos, overlay `post_approve.sundai.sh` onto `scripts/release/hooks/post_approve.sh` so the post-tag surface-verifier is active.
+     6. Commit and push the major plan, the v0.1 change, and the release-train templates before Fabro starts.
+   - Then hand the implementation to Fabro via the release-train workflow:
+     1. Write a bridge file at `spec/spec.md` summarizing: project name, what it does, tech stack, AI integration requirements, demo flow, the openspec change path (`openspec/changes/v0.1/`), and the chosen Design Direction.
      2. Commit and push `spec/spec.md` together with the OpenSpec artifacts so GitHub reflects the intended build inputs before the long Fabro run starts.
-     3. Copy the `fabro/` directory and `fabro.toml` from this workspace into the new repo.
-     4. Write `fabro/workflows/generic-build/runs/sundai-ship.toml` with:
+     3. Copy the `fabro/` directory and `fabro.toml` from this workspace into the new repo — this gives the target repo `fabro/workflows/release-train/`, `fabro/workflows/major-plan/`, `fabro/workflows/generic-build/`, and `fabro/workflows/sundai-ship/` (the last kept for profile fallback).
+     4. Write `fabro/workflows/release-train/runs/sundai-ship.toml` with:
         - `graph = "../workflow.fabro"`
+        - `release_version = "v0.1"`
+        - `major_version = "v0"`
+        - `spec_dir = "openspec/changes/v0.1"`
         - `app_dir = "."`
-        - `spec_dir = "openspec"`
         - `workflow_dir = ".workflow"`
-     5. Run: `fabro validate fabro/workflows/generic-build/workflow.fabro`
-     6. Run: `fabro run fabro/workflows/generic-build/runs/sundai-ship.toml --preflight --sandbox local`
-     7. Run: `fabro run fabro/workflows/generic-build/runs/sundai-ship.toml --auto-approve --sandbox local`
-     8. This executes the corrected plan → implement → review → verify pipeline automatically for repo-root or nested-app repos.
-     9. If the repo uses `fabro/workflows/sundai-ship/workflow.fabro`, the added design-skill prompts (`prompts/polish.md` and `prompts/design-check.md`) can use the spec's Design Direction to do an extra polish / design quality pass after a clean build.
+        - `skip_planning = false`
+     5. Run: `fabro validate fabro/workflows/release-train/workflow.fabro`
+     6. Run: `fabro run fabro/workflows/release-train/runs/sundai-ship.toml --preflight --sandbox local`
+     7. Run: `fabro run fabro/workflows/release-train/runs/sundai-ship.toml --auto-approve --sandbox local`
+     8. This executes the release-train ship loop (plan → implement → review → verify → polish) for repo-root or nested-app repos. The `pre_release.sh` hook runs before the build; the `post_approve.sh` hook is gated behind the later `@sundaibot approve` tag step.
+     9. If the repo uses `fabro/workflows/sundai-ship/workflow.fabro` as a fallback, the added design-skill prompts (`prompts/polish.md` and `prompts/design-check.md`) can use the spec's Design Direction to do an extra polish / design quality pass after a clean build.
    - Preferred implementation pattern:
-     - OpenSpec defines the product and requirements.
+     - `openspec/major/v0/plan.md` captures the major intent.
+     - `openspec/changes/v0.1/` captures the first slice.
      - `spec/spec.md` gives Fabro a compact execution brief.
-     - Fabro implements the MVP from those specs.
+     - Fabro (release-train) implements the MVP from those specs.
    - If OpenSpec setup fails, report that exact blocker and continue with the previous direct `spec/spec.md` + Fabro/manual path so the project still ships.
-   - If `fabro` is not available or fails, fall back to building the MVP manually (scaffold code directly), but still keep the OpenSpec artifacts in the repo.
+   - If `fabro` is not available or fails, fall back to building the MVP manually (scaffold code directly), but still keep the OpenSpec artifacts (major plan + v0.1 change) in the repo.
    - **Mandatory:** each project must use AI in-product via OpenRouter **free** models.
    - Use this provider config (from environment variables, never hardcode secrets):
      - `OPENROUTER_BASE_URL=https://openrouter.ai/api/v1`
@@ -321,7 +348,8 @@ During execution, emit concise live status updates after each major phase using 
    - If any field is missing, patch again and re-verify before publish.
    - Do **not** report the project as done just because create/save succeeded.
 
-8. **Publish/submit (cookie-backed API mandatory-first)**
+8. **Publish/submit (cookie-backed API mandatory-first)** — *Sundai profile override: publish during ship*
+   - **Profile note:** the generic release-train rule is "tag is the public milestone." Sundai inverts that: the project card must reach APPROVED during this step so drafts stay visible on the public site. Git tag and openspec archive still wait for the `@sundaibot approve` comment on the v0.1 tracking issue (Step 16).
    - Use `PATCH /api/projects/{projectId}/submit` with JSON body `{ "status": "APPROVED" }` by default.
    - Prefer `SUNDAI_COOKIE_HEADER` when present; on `401`, report expired auth and refresh/reacquire the cookie header before UI fallback.
    - Treat 200 as success.
@@ -401,6 +429,23 @@ During execution, emit concise live status updates after each major phase using 
      - Deploy URL (Cloud Run or Pages)
      - Publish status confirmation
      - AI verification note (which model + proof that user-facing AI path worked)
+     - **Tag status:** "v0.1 shipped, awaiting `@sundaibot approve` on tracking issue for v0.1.0 tag."
+
+16. **Open v0.1 tracking issue (release-train tag gate)**
+   - After Step 15 returns final artifacts, open one GitHub issue on the target repo titled `Release train: v0.1`.
+   - Body: use [`skills/release-train/references/issue-template.md`](../release-train/references/issue-template.md). Fill placeholders:
+     - `<deploy URL>` — the final Demo URL from Step 10.
+     - `openspec/changes/vX.Y/` links → `openspec/changes/v0.1/`.
+     - `openspec/major/vX/plan.md` link → `openspec/major/v0/plan.md`.
+     - Checklist items — render directly from the acceptance criteria in `openspec/changes/v0.1/specs/**/spec.md`.
+   - Post a single follow-up comment on the issue linking to the preview and summarizing the test plan.
+   - Stop. Do **not** create the git tag or archive the change. Tag happens later when the operator comments `@sundaibot approve`, at which point the release-train `scripts/release/finalize.sh` runs and the `post_approve.sh` hook re-verifies the public surface.
+
+## Post-tag Sundai hygiene (runs later, not in this autonomous turn)
+
+When the operator comments `@sundaibot approve` on the v0.1 tracking issue, the release-train `scripts/release/finalize.sh` runs: tag `v0.1.0`, merge PR, archive `openspec/changes/v0.1/` → `openspec/changes/archive/YYYY-MM-DD-v0.1/`, append `CHANGELOG.md`, close the tracking issue, then run `scripts/release/hooks/post_approve.sh`.
+
+Sundai target repos overlay [`skills/release-train/templates/scripts/release/hooks/post_approve.sundai.sh`](../release-train/templates/scripts/release/hooks/post_approve.sundai.sh) onto `post_approve.sh`. That hook re-runs the Step 12 public-page QA items (GitHub link, Demo link, description, `vyahhi` team member, thumbnail, APPROVED status) against the live Sundai API and exits non-zero if any surface item regressed after tag. Step 12 in this skill is the authoritative human-readable description of what the hook checks.
 
 ## Fast command interpretation
 When user says short commands like:
