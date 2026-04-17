@@ -1,7 +1,7 @@
 import { readdir, readFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
-import type { ObservatoryEvent, RunKind, RunStage, RunStatus } from "@/lib/observability-schema";
+import type { CommandStatus, ObservatoryCommand, ObservatoryEvent, RunKind, RunStage, RunStatus } from "@/lib/observability-schema";
 
 type StoreSessionEntry = {
   sessionFile?: string;
@@ -72,6 +72,29 @@ type TranscriptSnapshot = {
   sawObserveSignal: boolean;
   sawMutationSignal: boolean;
   sawToolError: boolean;
+  commands: ObservatoryCommand[];
+};
+
+type ToolCallRecord = {
+  id: string;
+  timestamp: string;
+  name: string;
+  arguments: unknown;
+};
+
+type CommandAttempt = {
+  id: string;
+  runId: string;
+  label: string;
+  command: string;
+  cwd?: string;
+  status: CommandStatus;
+  startedAt: string;
+  endedAt?: string;
+  durationMs?: number;
+  exitCode?: number;
+  logSummary?: string;
+  source: "runtime";
 };
 
 export type RuntimeRunRecord = {
@@ -89,6 +112,7 @@ export type RuntimeRunRecord = {
 export type RuntimeRunSnapshot = {
   run: RuntimeRunRecord;
   events: ObservatoryEvent[];
+  commands: ObservatoryCommand[];
 };
 
 export type RuntimeCollection = {
@@ -116,7 +140,12 @@ export async function collectOpenClawRuntime(): Promise<RuntimeCollection | null
       const transcript = await loadTranscriptSnapshot(session.sessionFile, transcriptCache);
       const run = buildRunRecord(session, transcript);
       const events = buildRunEvents(run, session, transcript);
-      runs.push({ run, events });
+      const commands = (transcript?.commands ?? []).map((command) => ({
+        ...command,
+        runId: run.id,
+        source: run.source,
+      }));
+      runs.push({ run, events, commands });
     }
 
     runs.sort((left, right) => Date.parse(right.run.updatedAt) - Date.parse(left.run.updatedAt));
@@ -208,6 +237,10 @@ async function loadTranscriptSnapshot(
     let sawMutationSignal = false;
     let sawToolError = false;
     const pendingToolCalls = new Set<string>();
+    const toolCallIndex = new Map<string, ToolCallRecord>();
+    const commandIndex = new Map<string, CommandAttempt>();
+    const toolCallToCommand = new Map<string, string>();
+    const sessionToCommand = new Map<string, string>();
 
     for (const line of lines) {
       const record = JSON.parse(line) as Record<string, unknown>;
@@ -262,7 +295,15 @@ async function loadTranscriptSnapshot(
       }
 
       for (const toolCall of toolCalls) {
-        if (toolCall.id) pendingToolCalls.add(toolCall.id);
+        if (toolCall.id) {
+          pendingToolCalls.add(toolCall.id);
+          toolCallIndex.set(toolCall.id, {
+            id: toolCall.id,
+            timestamp: transcriptMessage.timestamp,
+            name: toolCall.name,
+            arguments: toolCall.arguments,
+          });
+        }
         latestToolActivity = {
           id: `${itemId}:${toolCall.name}:${toolCall.id ?? "call"}`,
           kind: "call",
@@ -276,6 +317,26 @@ async function loadTranscriptSnapshot(
         sawDeploySignal ||= signal.deploy;
         sawObserveSignal ||= signal.observe;
         sawMutationSignal ||= signal.mutate;
+
+        const commandInvocation = extractCommandInvocation(toolCall.name, toolCall.arguments);
+        if (commandInvocation && toolCall.id) {
+          const existing = commandIndex.get(toolCall.id);
+          commandIndex.set(toolCall.id, {
+            id: toolCall.id,
+            runId: sessionFile,
+            label: commandInvocation.label,
+            command: commandInvocation.command,
+            cwd: commandInvocation.cwd,
+            status: "running",
+            startedAt: transcriptMessage.timestamp,
+            endedAt: existing?.endedAt,
+            durationMs: existing?.durationMs,
+            exitCode: existing?.exitCode,
+            logSummary: existing?.logSummary,
+            source: "runtime",
+          });
+          toolCallToCommand.set(toolCall.id, toolCall.id);
+        }
       }
 
       if (role === "toolResult") {
@@ -298,6 +359,20 @@ async function loadTranscriptSnapshot(
         sawDeploySignal ||= signal.deploy;
         sawObserveSignal ||= signal.observe;
         sawMutationSignal ||= signal.mutate;
+
+        applyCommandResult({
+          toolName,
+          toolCallId,
+          timestamp: transcriptMessage.timestamp,
+          text,
+          details: record.details,
+          isError,
+          sessionFile,
+          toolCallIndex,
+          commandIndex,
+          toolCallToCommand,
+          sessionToCommand,
+        });
       }
 
       if (text) {
@@ -329,6 +404,7 @@ async function loadTranscriptSnapshot(
       sawObserveSignal,
       sawMutationSignal,
       sawToolError,
+      commands: [...commandIndex.values()].sort((left, right) => Date.parse(left.startedAt) - Date.parse(right.startedAt)),
     };
 
     cache.set(sessionFile, snapshot);
@@ -462,6 +538,246 @@ function buildRunEvents(
   return events.sort((left, right) => Date.parse(left.ts) - Date.parse(right.ts));
 }
 
+function applyCommandResult({
+  toolName,
+  toolCallId,
+  timestamp,
+  text,
+  details,
+  isError,
+  sessionFile,
+  toolCallIndex,
+  commandIndex,
+  toolCallToCommand,
+  sessionToCommand,
+}: {
+  toolName: string;
+  toolCallId?: string;
+  timestamp: string;
+  text?: string;
+  details: unknown;
+  isError: boolean;
+  sessionFile: string;
+  toolCallIndex: Map<string, ToolCallRecord>;
+  commandIndex: Map<string, CommandAttempt>;
+  toolCallToCommand: Map<string, string>;
+  sessionToCommand: Map<string, string>;
+}) {
+  const detailRecord = asRecord(details);
+  const toolCall = toolCallId ? toolCallIndex.get(toolCallId) : undefined;
+  const sessionId = stringifyValue(detailRecord?.sessionId);
+  const resultStatus = normalizeCommandStatus(stringifyValue(detailRecord?.status), isError, asNumber(detailRecord?.exitCode));
+  const logSummary = summarizeCommandLog(extractCommandLog(detailRecord, text));
+  const durationMs = asNumber(detailRecord?.durationMs);
+  const exitCode = asNumber(detailRecord?.exitCode);
+  const cwd = stringifyValue(detailRecord?.cwd);
+
+  if (toolCall) {
+    const commandInvocation = extractCommandInvocation(toolCall.name, toolCall.arguments);
+    if (commandInvocation) {
+      const commandId = toolCallToCommand.get(toolCall.id) ?? toolCall.id;
+      const existing = commandIndex.get(commandId);
+      commandIndex.set(
+        commandId,
+        mergeCommandAttempt(
+          existing ?? {
+            id: commandId,
+            runId: sessionFile,
+            label: commandInvocation.label,
+            command: commandInvocation.command,
+            cwd: commandInvocation.cwd,
+            status: "running",
+            startedAt: toolCall.timestamp,
+            source: "runtime",
+          },
+          {
+            label: commandInvocation.label,
+            command: commandInvocation.command,
+            cwd,
+            status: resultStatus,
+            endedAt: resultStatus === "running" ? undefined : timestamp,
+            durationMs,
+            exitCode,
+            logSummary,
+          }
+        )
+      );
+
+      if (sessionId) {
+        sessionToCommand.set(sessionId, commandId);
+      }
+
+      return;
+    }
+
+    const processInvocation = extractProcessInvocation(toolCall.name, toolCall.arguments);
+    if (processInvocation) {
+      const commandId = sessionToCommand.get(processInvocation.sessionId);
+      if (!commandId) return;
+
+      const existing = commandIndex.get(commandId);
+      if (!existing) return;
+
+      commandIndex.set(
+        commandId,
+        mergeCommandAttempt(existing, {
+          status: resultStatus,
+          endedAt: resultStatus === "running" ? undefined : timestamp,
+          durationMs,
+          exitCode,
+          logSummary,
+        })
+      );
+    }
+  }
+
+  if (toolName === "process" && sessionId) {
+    const commandId = sessionToCommand.get(sessionId);
+    if (!commandId) return;
+
+    const existing = commandIndex.get(commandId);
+    if (!existing) return;
+
+    commandIndex.set(
+      commandId,
+      mergeCommandAttempt(existing, {
+        status: resultStatus,
+        endedAt: resultStatus === "running" ? undefined : timestamp,
+        durationMs,
+        exitCode,
+        logSummary,
+      })
+    );
+  }
+}
+
+function mergeCommandAttempt(
+  current: CommandAttempt,
+  update: {
+    label?: string;
+    command?: string;
+    cwd?: string;
+    status?: CommandStatus;
+    endedAt?: string;
+    durationMs?: number;
+    exitCode?: number;
+    logSummary?: string;
+  }
+): CommandAttempt {
+  const status = update.status ?? current.status;
+  const endedAt = status === "running" ? undefined : update.endedAt ?? current.endedAt;
+  const durationMs =
+    typeof update.durationMs === "number"
+      ? update.durationMs
+      : endedAt
+        ? Math.max(0, Date.parse(endedAt) - Date.parse(current.startedAt))
+        : current.durationMs;
+
+  return {
+    ...current,
+    label: update.label ?? current.label,
+    command: update.command ?? current.command,
+    cwd: update.cwd ?? current.cwd,
+    status,
+    endedAt,
+    durationMs,
+    exitCode: typeof update.exitCode === "number" ? update.exitCode : current.exitCode,
+    logSummary: update.logSummary ?? current.logSummary,
+  };
+}
+
+function extractCommandInvocation(toolName: string, args: unknown) {
+  const record = asRecord(args);
+  const command = stringifyValue(record?.command) ?? stringifyValue(record?.cmd);
+
+  if (!command) return null;
+  if (!isCommandTool(toolName)) return null;
+
+  return {
+    label: summarizeCommandLabel(command),
+    command,
+    cwd: stringifyValue(record?.workdir) ?? stringifyValue(record?.cwd),
+  };
+}
+
+function extractProcessInvocation(toolName: string, args: unknown) {
+  if (toolName !== "process") return null;
+
+  const record = asRecord(args);
+  const sessionId = stringifyValue(record?.sessionId);
+  if (!sessionId) return null;
+
+  return {
+    action: stringifyValue(record?.action),
+    sessionId,
+  };
+}
+
+function isCommandTool(toolName: string) {
+  return (
+    toolName === "exec" ||
+    toolName === "bash" ||
+    toolName === "exec_command" ||
+    toolName.endsWith(".exec") ||
+    toolName.endsWith(".exec_command")
+  );
+}
+
+function normalizeCommandStatus(rawStatus: string | undefined, isError: boolean, exitCode?: number): CommandStatus {
+  if (isError) return "failed";
+
+  switch (rawStatus?.toLowerCase()) {
+    case "running":
+    case "active":
+    case "started":
+      return "running";
+    case "completed":
+    case "done":
+    case "success":
+    case "succeeded":
+      return exitCode === undefined || exitCode === 0 ? "done" : "failed";
+    case "failed":
+    case "error":
+    case "aborted":
+    case "cancelled":
+    case "canceled":
+    case "terminated":
+      return "failed";
+    default:
+      if (typeof exitCode === "number") {
+        return exitCode === 0 ? "done" : "failed";
+      }
+      return "running";
+  }
+}
+
+function summarizeCommandLabel(command: string) {
+  return summarizeText(command, 96);
+}
+
+function extractCommandLog(details: Record<string, unknown> | null, text?: string) {
+  const aggregated = stringifyValue(details?.aggregated);
+  const tail = stringifyValue(details?.tail);
+  const content = [aggregated, tail, text].filter((value): value is string => Boolean(value)).join("\n").trim();
+  return content || undefined;
+}
+
+function summarizeCommandLog(log?: string) {
+  if (!log) return undefined;
+  const normalized = log
+    .replace(/\r/g, "")
+    .split("\n")
+    .map((line) => line.trimEnd())
+    .join("\n")
+    .trim();
+
+  if (normalized.length <= 4000) {
+    return normalized;
+  }
+
+  return `...${normalized.slice(-3997).trimStart()}`;
+}
+
 function inferOwner(sessionKey: string, session?: RuntimeSession): RunKind {
   if (session?.spawnedBy || sessionKey.includes(":subagent:")) return "subagent";
   return "main";
@@ -487,12 +803,16 @@ function deriveTranscriptStatus(
   transcript: TranscriptSnapshot | null,
   primaryStage: RunStage
 ): RunStatus {
+  const latestCommand = transcript?.commands.at(-1);
+  const latestCommandTs = latestCommand ? Date.parse(latestCommand.endedAt ?? latestCommand.startedAt) : undefined;
+  const latestAssistantTs = transcript?.latestAssistant ? Date.parse(transcript.latestAssistant.timestamp) : undefined;
+
   if (session.abortedLastRun) {
     return "failed";
   }
 
   if (session.endedAt) {
-    return transcript?.sawToolError ? "failed" : "done";
+    return transcript?.sawToolError || latestCommand?.status === "failed" ? "failed" : "done";
   }
 
   if (!transcript) {
@@ -500,6 +820,15 @@ function deriveTranscriptStatus(
   }
 
   if (transcript.sawToolError && transcript.lastMessage?.role === "toolResult") {
+    return "failed";
+  }
+
+  if (
+    latestCommand?.status === "failed" &&
+    typeof latestCommandTs === "number" &&
+    !Number.isNaN(latestCommandTs) &&
+    (latestAssistantTs === undefined || Number.isNaN(latestAssistantTs) || latestCommandTs >= latestAssistantTs)
+  ) {
     return "failed";
   }
 
@@ -736,6 +1065,14 @@ function asIsoTimestamp(value: unknown) {
   if (typeof value !== "string" || value.length === 0) return undefined;
   const parsed = new Date(value);
   return Number.isNaN(parsed.getTime()) ? undefined : parsed.toISOString();
+}
+
+function asRecord(value: unknown) {
+  return value && typeof value === "object" ? (value as Record<string, unknown>) : null;
+}
+
+function asNumber(value: unknown) {
+  return typeof value === "number" && Number.isFinite(value) ? value : undefined;
 }
 
 function timestampFromMs(value: number | undefined) {

@@ -3,7 +3,7 @@ import path from "node:path";
 import Database from "better-sqlite3";
 import type { Database as BetterSQLiteDatabase } from "better-sqlite3";
 import { Pool } from "pg";
-import type { ObservatoryEvent } from "@/lib/observability-schema";
+import type { ObservatoryCommand, ObservatoryEvent } from "@/lib/observability-schema";
 
 const dataDir = path.join(process.cwd(), "data", "observability");
 const dbFile = path.join(dataDir, "observability.db");
@@ -58,6 +58,21 @@ export type RunRecordInput = {
   eventCount: number;
 };
 
+export type CommandRow = {
+  id: string;
+  run_id: string;
+  label: string;
+  command_text: string;
+  cwd: string | null;
+  status: string;
+  started_at: string;
+  ended_at: string | null;
+  duration_ms: number | null;
+  exit_code: number | null;
+  log_summary: string | null;
+  source: string;
+};
+
 export function hasExternalDatabase() {
   return Boolean(process.env.DATABASE_URL);
 }
@@ -95,8 +110,26 @@ export async function initializeStorage() {
         PRIMARY KEY (id, source)
       );
 
+      CREATE TABLE IF NOT EXISTS commands (
+        id TEXT NOT NULL,
+        run_id TEXT NOT NULL,
+        label TEXT NOT NULL,
+        command_text TEXT NOT NULL,
+        cwd TEXT,
+        status TEXT NOT NULL,
+        started_at TIMESTAMPTZ NOT NULL,
+        ended_at TIMESTAMPTZ,
+        duration_ms INTEGER,
+        exit_code INTEGER,
+        log_summary TEXT,
+        source TEXT NOT NULL DEFAULT 'live',
+        PRIMARY KEY (id, source)
+      );
+
       CREATE INDEX IF NOT EXISTS idx_events_run_id ON events(run_id, source, ts);
       CREATE INDEX IF NOT EXISTS idx_events_source_ts ON events(source, ts DESC);
+      CREATE INDEX IF NOT EXISTS idx_commands_run_id ON commands(run_id, source, started_at);
+      CREATE INDEX IF NOT EXISTS idx_commands_status ON commands(source, status, started_at DESC);
     `);
     return;
   }
@@ -180,6 +213,22 @@ export async function getRunEventRows(runId: string, source: string) {
 
   const db = getSqliteDb();
   return db.prepare(`SELECT * FROM events WHERE run_id = ? AND source = ? ORDER BY ts ASC`).all(runId, source) as EventRow[];
+}
+
+export async function getRunCommandRows(runId: string, source: string) {
+  if (hasExternalDatabase()) {
+    const pool = getPgPool();
+    const result = await pool.query<CommandRow>(
+      `SELECT * FROM commands WHERE run_id = $1 AND source = $2 ORDER BY started_at ASC`,
+      [runId, source]
+    );
+    return result.rows;
+  }
+
+  const db = getSqliteDb();
+  return db
+    .prepare(`SELECT * FROM commands WHERE run_id = ? AND source = ? ORDER BY started_at ASC`)
+    .all(runId, source) as CommandRow[];
 }
 
 export async function insertEventRecord(event: ObservatoryEvent) {
@@ -330,6 +379,52 @@ export async function replaceRunEvents(run: RunRecordInput, events: ObservatoryE
   replaceRunEventsSqlite(db, run, events);
 }
 
+export async function replaceRunCommands(run: RunRecordInput, commands: ObservatoryCommand[]) {
+  if (hasExternalDatabase()) {
+    const pool = getPgPool();
+    const client = await pool.connect();
+
+    try {
+      await client.query("BEGIN");
+      await client.query(`DELETE FROM commands WHERE run_id = $1 AND source = $2`, [run.id, run.source]);
+
+      for (const command of commands) {
+        await client.query(
+          `INSERT INTO commands (
+            id, run_id, label, command_text, cwd, status, started_at, ended_at, duration_ms, exit_code, log_summary, source
+          ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)`,
+          [
+            command.id,
+            command.runId,
+            command.label,
+            command.command,
+            command.cwd ?? null,
+            command.status,
+            command.startedAt,
+            command.endedAt ?? null,
+            command.durationMs ?? null,
+            command.exitCode ?? null,
+            command.logSummary ?? null,
+            command.source ?? run.source,
+          ]
+        );
+      }
+
+      await client.query("COMMIT");
+    } catch (error) {
+      await client.query("ROLLBACK");
+      throw error;
+    } finally {
+      client.release();
+    }
+
+    return;
+  }
+
+  const db = getSqliteDb();
+  replaceRunCommandsSqlite(db, run, commands);
+}
+
 function getPgPool() {
   if (!globalThis.__observabilityPgPool__) {
     globalThis.__observabilityPgPool__ = new Pool({ connectionString: process.env.DATABASE_URL });
@@ -372,8 +467,26 @@ function getSqliteDb() {
         PRIMARY KEY (id, source)
       );
 
+      CREATE TABLE IF NOT EXISTS commands (
+        id TEXT NOT NULL,
+        run_id TEXT NOT NULL,
+        label TEXT NOT NULL,
+        command_text TEXT NOT NULL,
+        cwd TEXT,
+        status TEXT NOT NULL,
+        started_at TEXT NOT NULL,
+        ended_at TEXT,
+        duration_ms INTEGER,
+        exit_code INTEGER,
+        log_summary TEXT,
+        source TEXT NOT NULL DEFAULT 'live',
+        PRIMARY KEY (id, source)
+      );
+
       CREATE INDEX IF NOT EXISTS idx_events_run_id ON events(run_id, source, ts);
       CREATE INDEX IF NOT EXISTS idx_events_source_ts ON events(source, ts DESC);
+      CREATE INDEX IF NOT EXISTS idx_commands_run_id ON commands(run_id, source, started_at);
+      CREATE INDEX IF NOT EXISTS idx_commands_status ON commands(source, status, started_at DESC);
     `);
     migrateLegacyData(db);
     globalThis.__observabilityDb__ = { db };
@@ -542,6 +655,37 @@ function replaceRunEventsSqlite(db: BetterSQLiteDatabase, run: RunRecordInput, e
   });
 
   transaction(run, events);
+}
+
+function replaceRunCommandsSqlite(db: BetterSQLiteDatabase, run: RunRecordInput, commands: ObservatoryCommand[]) {
+  const transaction = db.transaction((nextRun: RunRecordInput, nextCommands: ObservatoryCommand[]) => {
+    db.prepare(`DELETE FROM commands WHERE run_id = ? AND source = ?`).run(nextRun.id, nextRun.source);
+
+    const insertCommand = db.prepare(
+      `INSERT INTO commands (
+        id, run_id, label, command_text, cwd, status, started_at, ended_at, duration_ms, exit_code, log_summary, source
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+    );
+
+    for (const command of nextCommands) {
+      insertCommand.run(
+        command.id,
+        command.runId,
+        command.label,
+        command.command,
+        command.cwd ?? null,
+        command.status,
+        command.startedAt,
+        command.endedAt ?? null,
+        command.durationMs ?? null,
+        command.exitCode ?? null,
+        command.logSummary ?? null,
+        command.source ?? nextRun.source
+      );
+    }
+  });
+
+  transaction(run, commands);
 }
 
 function extractTask(meta?: string) {

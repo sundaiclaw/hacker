@@ -7,7 +7,8 @@
     "build": "next build --webpack",
     "start": "next start",
     "lint": "eslint",
-    "emit:sample": "node ./scripts/emit-sample-run.mjs"
+    "emit:sample": "node ./scripts/emit-sample-run.mjs",
+    "test:run-detail": "node --experimental-strip-types --test tests/run-detail-api.test.mjs"
   },
   "dependencies": {
     "@types/better-sqlite3": "^7.6.13",

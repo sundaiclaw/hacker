@@ -22,6 +22,7 @@ export default async function RunDetailPage({ params }: { params: Promise<{ id: 
   }
 
   const latestEvent = detail.events[detail.events.length - 1];
+  const failedCommands = detail.commands.filter((command) => command.status === "failed");
 
   return (
     <main className="min-h-screen text-foreground">
@@ -69,39 +70,74 @@ export default async function RunDetailPage({ params }: { params: Promise<{ id: 
 
             <div className="grid gap-4 border-t border-white/8 px-5 py-5 sm:grid-cols-2 sm:px-7 lg:grid-cols-4">
               <KeyMetric label="Events" value={String(detail.run.eventCount)} meta="Structured observations attached to this run." />
+              <KeyMetric label="Commands" value={String(detail.commands.length)} meta="First-class command executions captured for this run." />
               <KeyMetric label="Started" value={formatConsoleTime(detail.run.startedAt)} meta={formatRelativeWindow(detail.run.startedAt)} />
-              <KeyMetric label="Updated" value={formatConsoleTime(detail.run.updatedAt)} meta={formatRelativeWindow(detail.run.updatedAt)} />
-              <KeyMetric label="Status" value={detail.run.status} meta={`Current stage: ${detail.run.stage}`} />
+              <KeyMetric
+                label="Failed commands"
+                value={String(failedCommands.length)}
+                meta={failedCommands.length > 0 ? "Failed command logs are expanded below." : "No failed commands recorded."}
+              />
+              <KeyMetric label="Status" value={detail.run.status} meta={`Current stage: ${detail.run.stage} · Updated ${formatConsoleTime(detail.run.updatedAt)}`} />
             </div>
           </header>
 
           <div className="grid gap-6 2xl:grid-cols-[minmax(0,1.5fr)_minmax(340px,0.92fr)]">
-            <SectionCard
-              eyebrow="Timeline"
-              title="Ordered event history"
-              description="Full chronological replay for this run, preserving the existing event data while improving scannability."
-              contentClassName="px-5 py-5 sm:px-6 sm:py-6"
-            >
-              {detail.events.length > 0 ? (
-                <div className="max-h-[980px] space-y-4 overflow-auto pr-1">
-                  {detail.events.map((event) => (
-                    <TimelineEventCard
-                      key={event.id}
-                      eyebrow={event.type}
-                      title={event.title}
-                      meta={event.meta}
-                      timestamp={formatConsoleTime(event.ts)}
-                      status={event.status}
-                      stage={event.stage}
-                      owner={event.owner}
-                      runId={event.runId}
-                    />
-                  ))}
-                </div>
-              ) : (
-                <p className="text-sm leading-6 text-slate-400">No events recorded for this run.</p>
-              )}
-            </SectionCard>
+            <div className="space-y-6">
+              <SectionCard
+                eyebrow="Commands"
+                title="Execution trace"
+                description="Shell-level command telemetry for this run, including cwd, timing, exit code, and failed-output inspection."
+                contentClassName="px-5 py-5 sm:px-6 sm:py-6"
+              >
+                {detail.commands.length > 0 ? (
+                  <div className="max-h-[920px] space-y-4 overflow-auto pr-1">
+                    {detail.commands.map((command) => (
+                      <CommandCard
+                        key={command.id}
+                        label={command.label}
+                        command={command.command}
+                        cwd={command.cwd}
+                        status={command.status}
+                        startedAt={command.startedAt}
+                        endedAt={command.endedAt}
+                        durationMs={command.durationMs}
+                        exitCode={command.exitCode}
+                        logSummary={command.logSummary}
+                      />
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-sm leading-6 text-slate-400">No command telemetry recorded for this run.</p>
+                )}
+              </SectionCard>
+
+              <SectionCard
+                eyebrow="Timeline"
+                title="Ordered event history"
+                description="Full chronological replay for this run, preserving the existing event data while improving scannability."
+                contentClassName="px-5 py-5 sm:px-6 sm:py-6"
+              >
+                {detail.events.length > 0 ? (
+                  <div className="max-h-[980px] space-y-4 overflow-auto pr-1">
+                    {detail.events.map((event) => (
+                      <TimelineEventCard
+                        key={event.id}
+                        eyebrow={event.type}
+                        title={event.title}
+                        meta={event.meta}
+                        timestamp={formatConsoleTime(event.ts)}
+                        status={event.status}
+                        stage={event.stage}
+                        owner={event.owner}
+                        runId={event.runId}
+                      />
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-sm leading-6 text-slate-400">No events recorded for this run.</p>
+                )}
+              </SectionCard>
+            </div>
 
             <div className="space-y-6">
               <SectionCard
@@ -115,9 +151,45 @@ export default async function RunDetailPage({ params }: { params: Promise<{ id: 
                   <SynopsisRow label="Stage" value={detail.run.stage} />
                   <SynopsisRow label="Status" value={detail.run.status} />
                   <SynopsisRow label="Parent" value={detail.run.parentRunId ?? "Root run"} />
+                  <SynopsisRow label="Commands" value={`${detail.commands.length} recorded · ${failedCommands.length} failed`} />
                   <SynopsisRow label="Latest event" value={latestEvent ? latestEvent.title : "No events"} />
                 </div>
               </SectionCard>
+
+              {failedCommands.length > 0 ? (
+                <SectionCard
+                  eyebrow="Failures"
+                  title="Failed command inspection"
+                  description="Commands that exited unsuccessfully are promoted here with their captured output."
+                >
+                  <div className="space-y-4">
+                    {failedCommands.map((command) => (
+                      <div
+                        key={command.id}
+                        className="rounded-[1.15rem] border border-rose-500/28 bg-rose-500/[0.07] px-4 py-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]"
+                      >
+                        <div className="flex flex-wrap items-start justify-between gap-3">
+                          <div className="min-w-0">
+                            <p className="text-sm font-semibold text-rose-50">{command.label}</p>
+                            <p className="mt-2 font-mono text-xs leading-6 text-rose-100/85">{command.command}</p>
+                          </div>
+                          <StatusBadge status={command.status} />
+                        </div>
+                        <div className="mt-4 flex flex-wrap gap-2">
+                          {command.cwd ? <InfoPill tone="muted">{command.cwd}</InfoPill> : null}
+                          {typeof command.exitCode === "number" ? <InfoPill tone="muted">exit {command.exitCode}</InfoPill> : null}
+                          {typeof command.durationMs === "number" ? <InfoPill tone="muted">{formatDuration(command.durationMs)}</InfoPill> : null}
+                        </div>
+                        {command.logSummary ? (
+                          <pre className="mt-4 overflow-x-auto rounded-[1rem] border border-rose-400/18 bg-[#12080d] px-4 py-4 text-xs leading-6 text-rose-50/90">
+                            {command.logSummary}
+                          </pre>
+                        ) : null}
+                      </div>
+                    ))}
+                  </div>
+                </SectionCard>
+              ) : null}
 
               <SectionCard
                 eyebrow="Observed surfaces"
@@ -176,4 +248,67 @@ function SynopsisRow({ label, value }: { label: string; value: string }) {
       <p className="mt-3 text-sm leading-6 text-white">{value}</p>
     </div>
   );
+}
+
+function CommandCard({
+  label,
+  command,
+  cwd,
+  status,
+  startedAt,
+  endedAt,
+  durationMs,
+  exitCode,
+  logSummary,
+}: {
+  label: string;
+  command: string;
+  cwd?: string;
+  status: string;
+  startedAt: string;
+  endedAt?: string;
+  durationMs?: number;
+  exitCode?: number;
+  logSummary?: string;
+}) {
+  const isFailed = status === "failed";
+
+  return (
+    <div
+      className={
+        isFailed
+          ? "rounded-[1.2rem] border border-rose-500/28 bg-rose-500/[0.05] px-4 py-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]"
+          : "rounded-[1.2rem] border border-white/8 bg-white/[0.03] px-4 py-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]"
+      }
+    >
+      <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
+        <div className="min-w-0">
+          <p className="text-[10px] font-medium uppercase tracking-[0.32em] text-slate-500">Command</p>
+          <p className="mt-2 text-sm font-semibold leading-6 text-white">{label}</p>
+          <p className="mt-2 overflow-x-auto font-mono text-xs leading-6 text-slate-300">{command}</p>
+          <div className="mt-4 flex flex-wrap gap-2">
+            <StatusBadge status={status} />
+            {cwd ? <InfoPill tone="muted">{cwd}</InfoPill> : null}
+            {typeof exitCode === "number" ? <InfoPill tone="muted">exit {exitCode}</InfoPill> : null}
+            {typeof durationMs === "number" ? <InfoPill tone="muted">{formatDuration(durationMs)}</InfoPill> : null}
+          </div>
+        </div>
+        <div className="shrink-0 space-y-2 text-right text-xs uppercase tracking-[0.22em] text-slate-500">
+          <p>{formatConsoleTime(startedAt)}</p>
+          <p>{endedAt ? `ended ${formatConsoleTime(endedAt)}` : "still running"}</p>
+        </div>
+      </div>
+      {logSummary ? (
+        <pre className="mt-4 overflow-x-auto rounded-[1rem] border border-white/8 bg-[#07101a] px-4 py-4 text-xs leading-6 text-slate-300">
+          {logSummary}
+        </pre>
+      ) : null}
+    </div>
+  );
+}
+
+function formatDuration(durationMs: number) {
+  if (durationMs < 1000) return `${durationMs}ms`;
+  if (durationMs < 60_000) return `${(durationMs / 1000).toFixed(1)}s`;
+  return `${(durationMs / 60_000).toFixed(1)}m`;
 }
