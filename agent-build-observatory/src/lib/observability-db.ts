@@ -45,6 +45,19 @@ export type RunRow = {
   event_count: number;
 };
 
+export type RunRecordInput = {
+  id: string;
+  source: string;
+  parentRunId?: string;
+  task: string;
+  status: string;
+  stage: string;
+  owner: string;
+  startedAt: string;
+  updatedAt: string;
+  eventCount: number;
+};
+
 export function hasExternalDatabase() {
   return Boolean(process.env.DATABASE_URL);
 }
@@ -178,7 +191,7 @@ export async function insertEventRecord(event: ObservatoryEvent) {
 
     try {
       await client.query("BEGIN");
-      await client.query(
+      const insertResult = await client.query(
         `INSERT INTO events (
           id, run_id, parent_run_id, type, title, meta, stage, status, owner, payload_json, ts, source
         ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)
@@ -199,32 +212,34 @@ export async function insertEventRecord(event: ObservatoryEvent) {
         ]
       );
 
-      await client.query(
-        `INSERT INTO runs (
-          id, source, parent_run_id, task, status, stage, owner, started_at, updated_at, event_count
-        ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)
-        ON CONFLICT (id, source)
-        DO UPDATE SET
-          parent_run_id = COALESCE(EXCLUDED.parent_run_id, runs.parent_run_id),
-          task = EXCLUDED.task,
-          status = EXCLUDED.status,
-          stage = EXCLUDED.stage,
-          owner = EXCLUDED.owner,
-          updated_at = EXCLUDED.updated_at,
-          event_count = runs.event_count + 1`,
-        [
-          event.runId,
-          source,
-          event.parentRunId ?? null,
-          task,
-          event.status ?? "planning",
-          event.stage ?? "plan",
-          event.owner ?? "main",
-          event.ts,
-          event.ts,
-          1,
-        ]
-      );
+      if ((insertResult.rowCount ?? 0) > 0) {
+        await client.query(
+          `INSERT INTO runs (
+            id, source, parent_run_id, task, status, stage, owner, started_at, updated_at, event_count
+          ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)
+          ON CONFLICT (id, source)
+          DO UPDATE SET
+            parent_run_id = COALESCE(EXCLUDED.parent_run_id, runs.parent_run_id),
+            task = EXCLUDED.task,
+            status = EXCLUDED.status,
+            stage = EXCLUDED.stage,
+            owner = EXCLUDED.owner,
+            updated_at = EXCLUDED.updated_at,
+            event_count = runs.event_count + 1`,
+          [
+            event.runId,
+            source,
+            event.parentRunId ?? null,
+            task,
+            event.status ?? "planning",
+            event.stage ?? "plan",
+            event.owner ?? "main",
+            event.ts,
+            event.ts,
+            1,
+          ]
+        );
+      }
 
       await client.query("COMMIT");
     } catch (error) {
@@ -239,6 +254,80 @@ export async function insertEventRecord(event: ObservatoryEvent) {
 
   const db = getSqliteDb();
   insertEventSqlite(db, event);
+}
+
+export async function replaceRunEvents(run: RunRecordInput, events: ObservatoryEvent[]) {
+  if (hasExternalDatabase()) {
+    const pool = getPgPool();
+    const client = await pool.connect();
+
+    try {
+      await client.query("BEGIN");
+      await client.query(
+        `INSERT INTO runs (
+          id, source, parent_run_id, task, status, stage, owner, started_at, updated_at, event_count
+        ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)
+        ON CONFLICT (id, source)
+        DO UPDATE SET
+          parent_run_id = EXCLUDED.parent_run_id,
+          task = EXCLUDED.task,
+          status = EXCLUDED.status,
+          stage = EXCLUDED.stage,
+          owner = EXCLUDED.owner,
+          started_at = EXCLUDED.started_at,
+          updated_at = EXCLUDED.updated_at,
+          event_count = EXCLUDED.event_count`,
+        [
+          run.id,
+          run.source,
+          run.parentRunId ?? null,
+          run.task,
+          run.status,
+          run.stage,
+          run.owner,
+          run.startedAt,
+          run.updatedAt,
+          run.eventCount,
+        ]
+      );
+
+      await client.query(`DELETE FROM events WHERE run_id = $1 AND source = $2`, [run.id, run.source]);
+
+      for (const event of events) {
+        await client.query(
+          `INSERT INTO events (
+            id, run_id, parent_run_id, type, title, meta, stage, status, owner, payload_json, ts, source
+          ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)`,
+          [
+            event.id,
+            event.runId,
+            event.parentRunId ?? null,
+            event.type,
+            event.title,
+            event.meta ?? null,
+            event.stage ?? null,
+            event.status ?? null,
+            event.owner ?? null,
+            event.payload ? JSON.stringify(event.payload) : null,
+            event.ts,
+            event.source ?? run.source,
+          ]
+        );
+      }
+
+      await client.query("COMMIT");
+    } catch (error) {
+      await client.query("ROLLBACK");
+      throw error;
+    } finally {
+      client.release();
+    }
+
+    return;
+  }
+
+  const db = getSqliteDb();
+  replaceRunEventsSqlite(db, run, events);
 }
 
 function getPgPool() {
@@ -324,24 +413,30 @@ function readJsonl(filePath: string) {
 }
 
 function insertEventSqlite(db: BetterSQLiteDatabase, event: ObservatoryEvent) {
-  db.prepare(
+  const insertResult = db
+    .prepare(
     `INSERT OR IGNORE INTO events (
       id, run_id, parent_run_id, type, title, meta, stage, status, owner, payload_json, ts, source
     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
-  ).run(
-    event.id,
-    event.runId,
-    event.parentRunId ?? null,
-    event.type,
-    event.title,
-    event.meta ?? null,
-    event.stage ?? null,
-    event.status ?? null,
-    event.owner ?? null,
-    event.payload ? JSON.stringify(event.payload) : null,
-    event.ts,
-    event.source ?? "live"
-  );
+    )
+    .run(
+      event.id,
+      event.runId,
+      event.parentRunId ?? null,
+      event.type,
+      event.title,
+      event.meta ?? null,
+      event.stage ?? null,
+      event.status ?? null,
+      event.owner ?? null,
+      event.payload ? JSON.stringify(event.payload) : null,
+      event.ts,
+      event.source ?? "live"
+    );
+
+  if (insertResult.changes === 0) {
+    return;
+  }
 
   const task = extractTask(event.meta) ?? event.title;
   const source = event.source ?? "live";
@@ -389,6 +484,64 @@ function insertEventSqlite(db: BetterSQLiteDatabase, event: ObservatoryEvent) {
     event.runId,
     source
   );
+}
+
+function replaceRunEventsSqlite(db: BetterSQLiteDatabase, run: RunRecordInput, events: ObservatoryEvent[]) {
+  const transaction = db.transaction((nextRun: RunRecordInput, nextEvents: ObservatoryEvent[]) => {
+    db.prepare(
+      `INSERT INTO runs (
+        id, source, parent_run_id, task, status, stage, owner, started_at, updated_at, event_count
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      ON CONFLICT (id, source)
+      DO UPDATE SET
+        parent_run_id = excluded.parent_run_id,
+        task = excluded.task,
+        status = excluded.status,
+        stage = excluded.stage,
+        owner = excluded.owner,
+        started_at = excluded.started_at,
+        updated_at = excluded.updated_at,
+        event_count = excluded.event_count`
+    ).run(
+      nextRun.id,
+      nextRun.source,
+      nextRun.parentRunId ?? null,
+      nextRun.task,
+      nextRun.status,
+      nextRun.stage,
+      nextRun.owner,
+      nextRun.startedAt,
+      nextRun.updatedAt,
+      nextRun.eventCount
+    );
+
+    db.prepare(`DELETE FROM events WHERE run_id = ? AND source = ?`).run(nextRun.id, nextRun.source);
+
+    const insertEvent = db.prepare(
+      `INSERT INTO events (
+        id, run_id, parent_run_id, type, title, meta, stage, status, owner, payload_json, ts, source
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+    );
+
+    for (const event of nextEvents) {
+      insertEvent.run(
+        event.id,
+        event.runId,
+        event.parentRunId ?? null,
+        event.type,
+        event.title,
+        event.meta ?? null,
+        event.stage ?? null,
+        event.status ?? null,
+        event.owner ?? null,
+        event.payload ? JSON.stringify(event.payload) : null,
+        event.ts,
+        event.source ?? nextRun.source
+      );
+    }
+  });
+
+  transaction(run, events);
 }
 
 function extractTask(meta?: string) {
