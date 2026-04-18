@@ -1,0 +1,58 @@
+{
+  "requestId": "req-hosted-failed-1",
+  "source": {
+    "projectId": "project-a",
+    "environmentId": "prod",
+    "runtimeId": "runtime-1",
+    "sourceMode": "hosted"
+  },
+  "run": {
+    "id": "run-hosted-failed",
+    "task": "Deploy release",
+    "status": "failed",
+    "stage": "verify",
+    "owner": "main",
+    "startedAt": "2026-04-18T12:00:00.000Z",
+    "updatedAt": "2026-04-18T12:05:00.000Z"
+  },
+  "events": [
+    {
+      "id": "evt-run-started",
+      "runId": "run-hosted-failed",
+      "type": "run.started",
+      "title": "Started release deployment",
+      "stage": "plan",
+      "status": "planning",
+      "owner": "main",
+      "ts": "2026-04-18T12:00:00.000Z"
+    },
+    {
+      "id": "evt-run-failed",
+      "runId": "run-hosted-failed",
+      "type": "run.failed",
+      "title": "Verification failed after deployment prep",
+      "meta": "task=Deploy release",
+      "stage": "verify",
+      "status": "failed",
+      "owner": "main",
+      "ts": "2026-04-18T12:05:00.000Z"
+    }
+  ],
+  "commands": [
+    {
+      "id": "cmd-verify",
+      "runId": "run-hosted-failed",
+      "label": "npm run smoke",
+      "command": "npm run smoke",
+      "cwd": "/workspace/app",
+      "status": "failed",
+      "startedAt": "2026-04-18T12:03:10.000Z",
+      "endedAt": "2026-04-18T12:04:10.000Z",
+      "durationMs": 60000,
+      "exitCode": 1,
+      "logSummary": "Smoke test failed: SECRET_TOKEN was echoed to stderr.",
+      "sensitive": true,
+      "redactedLogSummary": "Smoke test failed. Raw stderr requires sensitive-log access."
+    }
+  ]
+}

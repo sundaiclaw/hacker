@@ -7,8 +7,20 @@
     "build": "next build --webpack",
     "start": "next start",
     "lint": "eslint",
+    "typecheck": "tsc --pretty false --project tsconfig.typecheck.json",
+    "storage:init": "node --experimental-strip-types ./scripts/init-observability-store.ts",
     "emit:sample": "node ./scripts/emit-sample-run.mjs",
-    "test:run-detail": "node --experimental-strip-types --test tests/run-detail-api.test.mjs"
+    "test:run-detail": "node --experimental-strip-types --test tests/run-detail-api.test.mjs",
+    "test:storage": "node --experimental-strip-types --test tests/observability-storage-config.test.mjs tests/observability-storage-init.test.mjs",
+    "retention:prune": "node --experimental-strip-types ./scripts/prune-observability-store.ts",
+    "test:telemetry": "node --experimental-strip-types --test tests/runtime-telemetry-ingestion.test.mjs",
+    "test:access": "node --experimental-strip-types --test tests/observability-access-control.test.mjs",
+    "test:retention": "node --experimental-strip-types --test tests/observability-retention.test.mjs",
+    "test:parser": "node --experimental-strip-types --test tests/runtime-parser-fixtures.test.mjs",
+    "test:projection": "node --experimental-strip-types --test tests/dashboard-projection.test.mjs",
+    "test:e2e": "node --experimental-strip-types --test tests/telemetry-e2e.test.mjs",
+    "test:observability": "npm run test:storage && npm run test:run-detail && npm run test:telemetry && npm run test:access && npm run test:retention && npm run test:parser && npm run test:projection && npm run test:e2e",
+    "verify": "npm run typecheck && npm run test:observability && npm run build"
   },
   "dependencies": {
     "@types/better-sqlite3": "^7.6.13",

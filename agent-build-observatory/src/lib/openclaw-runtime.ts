@@ -94,7 +94,7 @@ type CommandAttempt = {
   durationMs?: number;
   exitCode?: number;
   logSummary?: string;
-  source: "runtime";
+  source: "runtime-adapter";
 };
 
 export type RuntimeRunRecord = {
@@ -106,7 +106,7 @@ export type RuntimeRunRecord = {
   owner: RunKind;
   startedAt: string;
   updatedAt: string;
-  source: "runtime";
+  source: "runtime-adapter";
 };
 
 export type RuntimeRunSnapshot = {
@@ -160,6 +160,10 @@ export async function collectOpenClawRuntime(): Promise<RuntimeCollection | null
   }
 }
 
+
+export async function collectRuntimeAdapterSnapshot() {
+  return collectOpenClawRuntime();
+}
 async function loadRuntimeSessions() {
   const stores = await listRuntimeStores();
   const now = Date.now();
@@ -333,7 +337,7 @@ async function loadTranscriptSnapshot(
             durationMs: existing?.durationMs,
             exitCode: existing?.exitCode,
             logSummary: existing?.logSummary,
-            source: "runtime",
+            source: "runtime-adapter",
           });
           toolCallToCommand.set(toolCall.id, toolCall.id);
         }
@@ -446,7 +450,7 @@ function buildRunRecord(
     owner,
     startedAt,
     updatedAt,
-    source: "runtime",
+    source: "runtime-adapter",
   };
 }
 
@@ -588,7 +592,7 @@ function applyCommandResult({
             cwd: commandInvocation.cwd,
             status: "running",
             startedAt: toolCall.timestamp,
-            source: "runtime",
+            source: "runtime-adapter",
           },
           {
             label: commandInvocation.label,

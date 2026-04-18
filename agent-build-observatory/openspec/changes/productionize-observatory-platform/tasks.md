@@ -7,8 +7,8 @@
 
 ## 2. Durable hosted storage
 
-- [ ] 2.1 Make Postgres the default hosted persistence path and document the required configuration
-- [ ] 2.2 Add or formalize schema initialization/migration support for runs, events, and commands
+- [x] 2.1 Make Postgres the default hosted persistence path and document the required configuration
+- [x] 2.2 Add or formalize schema initialization/migration support for runs, events, and commands
 - [ ] 2.3 Implement retention configuration for observability records
 - [ ] 2.4 Verify dashboard and run-detail queries behave correctly against hosted persistence
 
@@ -31,4 +31,4 @@
 - [ ] 5.1 Add ingestion contract tests covering valid and invalid producer submissions
 - [ ] 5.2 Add fixture-driven runtime parser tests for local adapter mode
 - [ ] 5.3 Add end-to-end tests from telemetry ingestion through dashboard/run-detail projection
-- [ ] 5.4 Document deployment, rollback, and local-development modes for hosted observability
+- [x] 5.4 Document deployment, rollback, and local-development modes for hosted observability

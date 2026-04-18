@@ -1,0 +1,44 @@
+{
+  "requestId": "req-hosted-child-1",
+  "source": {
+    "projectId": "project-a",
+    "environmentId": "prod",
+    "runtimeId": "runtime-2",
+    "sourceMode": "hosted"
+  },
+  "run": {
+    "id": "run-hosted-child",
+    "parentRunId": "run-hosted-failed",
+    "task": "Investigate deployment rollback",
+    "status": "done",
+    "stage": "observe",
+    "owner": "subagent",
+    "startedAt": "2026-04-18T12:05:30.000Z",
+    "updatedAt": "2026-04-18T12:08:00.000Z"
+  },
+  "events": [
+    {
+      "id": "evt-child-started",
+      "runId": "run-hosted-child",
+      "parentRunId": "run-hosted-failed",
+      "type": "subagent.started",
+      "title": "Spawned rollback inspection",
+      "stage": "observe",
+      "status": "waiting",
+      "owner": "subagent",
+      "ts": "2026-04-18T12:05:30.000Z"
+    },
+    {
+      "id": "evt-child-done",
+      "runId": "run-hosted-child",
+      "parentRunId": "run-hosted-failed",
+      "type": "run.completed",
+      "title": "Rollback plan captured",
+      "stage": "observe",
+      "status": "done",
+      "owner": "subagent",
+      "ts": "2026-04-18T12:08:00.000Z"
+    }
+  ],
+  "commands": []
+}

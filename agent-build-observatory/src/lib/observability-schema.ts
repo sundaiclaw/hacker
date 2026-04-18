@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { observabilitySourceModeSchema } from "@/lib/observability-source";
 
 export const runStatusSchema = z.enum([
   "queued",
@@ -11,14 +12,7 @@ export const runStatusSchema = z.enum([
   "failed",
 ]);
 
-export const runStageSchema = z.enum([
-  "plan",
-  "build",
-  "verify",
-  "deploy",
-  "observe",
-  "done",
-]);
+export const runStageSchema = z.enum(["plan", "build", "verify", "deploy", "observe", "done"]);
 
 export const runKindSchema = z.enum(["main", "subagent", "reviewer", "system"]);
 
@@ -26,38 +20,49 @@ export const eventPayloadSchema = z.record(z.string(), z.unknown()).optional();
 
 export const commandStatusSchema = z.enum(["running", "done", "failed"]);
 
+const scopedRecordFields = {
+  source: z.string().trim().min(1).optional(),
+  sourceMode: observabilitySourceModeSchema.optional(),
+  projectId: z.string().trim().min(1).optional(),
+  environmentId: z.string().trim().min(1).optional(),
+  runtimeId: z.string().trim().min(1).optional(),
+};
+
 export const observabilityEventInputSchema = z.object({
-  runId: z.string().min(1),
-  parentRunId: z.string().min(1).optional(),
-  type: z.string().min(1),
-  title: z.string().min(1),
-  meta: z.string().optional(),
+  runId: z.string().trim().min(1),
+  parentRunId: z.string().trim().min(1).optional(),
+  type: z.string().trim().min(1),
+  title: z.string().trim().min(1),
+  meta: z.string().trim().min(1).optional(),
   stage: runStageSchema.optional(),
   status: runStatusSchema.optional(),
   owner: runKindSchema.optional(),
   payload: eventPayloadSchema,
   ts: z.string().datetime().optional(),
-  source: z.string().min(1).optional(),
+  ...scopedRecordFields,
 });
 
 export const observabilityEventSchema = observabilityEventInputSchema.extend({
-  id: z.string().min(1),
+  id: z.string().trim().min(1),
   ts: z.string().datetime(),
 });
 
 export const observabilityCommandSchema = z.object({
-  id: z.string().min(1),
-  runId: z.string().min(1),
-  label: z.string().min(1),
-  command: z.string().min(1),
-  cwd: z.string().min(1).optional(),
+  id: z.string().trim().min(1),
+  runId: z.string().trim().min(1),
+  label: z.string().trim().min(1),
+  command: z.string().trim().min(1),
+  cwd: z.string().trim().min(1).optional(),
   status: commandStatusSchema,
   startedAt: z.string().datetime(),
   endedAt: z.string().datetime().optional(),
   durationMs: z.number().int().nonnegative().optional(),
   exitCode: z.number().int().optional(),
-  logSummary: z.string().min(1).optional(),
-  source: z.string().min(1).optional(),
+  logSummary: z.string().trim().min(1).optional(),
+  sensitive: z.boolean().optional(),
+  redactedLogSummary: z.string().trim().min(1).optional(),
+  logSummaryVisible: z.boolean().optional(),
+  ...scopedRecordFields,
 });
 
 export type RunStatus = z.infer<typeof runStatusSchema>;
