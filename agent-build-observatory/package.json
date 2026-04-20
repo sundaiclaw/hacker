@@ -19,8 +19,9 @@
     "test:parser": "node --experimental-strip-types --test tests/runtime-parser-fixtures.test.mjs",
     "test:projection": "node --experimental-strip-types --test tests/dashboard-projection.test.mjs",
     "test:e2e": "node --experimental-strip-types --test tests/telemetry-e2e.test.mjs",
-    "test:observability": "npm run test:storage && npm run test:run-detail && npm run test:telemetry && npm run test:access && npm run test:retention && npm run test:parser && npm run test:projection && npm run test:e2e",
-    "verify": "npm run typecheck && npm run test:observability && npm run build"
+    "test:observability": "npm run test:storage && npm run test:run-detail && npm run test:telemetry && npm run test:access && npm run test:retention && npm run test:parser && npm run test:projection && npm run test:e2e && npm run test:browser",
+    "verify": "npm run typecheck && npm run test:observability && npm run build",
+    "test:browser": "node ./scripts/run-browser-tests.mjs"
   },
   "dependencies": {
     "@types/better-sqlite3": "^7.6.13",
@@ -32,6 +33,7 @@
     "zod": "^4.3.6"
   },
   "devDependencies": {
+    "@playwright/test": "^1.59.1",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/pg": "^8.20.0",

@@ -8,7 +8,8 @@ Constraints:
 - Existing demo and local runtime workflows are useful and should not be broken abruptly.
 - Hosted deployments need durable storage and must not depend on local filesystem state.
 - Command logs may contain sensitive data, so both ingestion and viewing require access control.
-- The current UI is strong visually, but operator workflows are still shallow.
+- The current UI is strong visually, but operator workflows are still shallow and the homepage mixes triage, investigation, and admin/integration concerns.
+- The domain model already exposes canonical run states (`queued`, `planning`, `building`, `verifying`, `deploying`, `waiting`, `done`, `failed`), stages (`plan`, `build`, `verify`, `deploy`, `observe`, `done`), source modes, and owner kinds. The UX architecture should align directly to those canonical values instead of introducing a second vocabulary.
 
 ## Goals / Non-Goals
 
@@ -17,8 +18,11 @@ Constraints:
 - Make durable hosted storage the default production model.
 - Preserve local runtime scraping as an adapter/debugging source rather than the primary hosted architecture.
 - Add enough authentication and authorization to safely expose the product beyond a single trusted operator.
-- Expand the console to support practical operator workflows such as filtering, hierarchy navigation, and failure inspection.
-- Define a verification plan that covers ingestion, projection, and runtime parsing.
+- Expand the console to support practical operator workflows such as filtering, hierarchy navigation, failure inspection, and explicit next actions.
+- Re-architect the dashboard as a triage-first surface that answers what needs attention now, what is active, what changed recently, and where to click next.
+- Separate operator-facing triage flows from admin/integration details such as ingestion contracts and backend/source diagnostics.
+- Simplify operator-facing copy and labels so the console is legible under time pressure.
+- Define a verification plan that covers ingestion, projection, runtime parsing, and operator-facing workflow clarity.
 
 **Non-Goals:**
 - Rebuilding the UI from scratch.
@@ -69,21 +73,42 @@ Why:
 Alternative considered:
 - Add viewer auth only. Rejected because unauthenticated ingestion would still allow spoofing or poisoning of observability data.
 
-### 5. Operator console improvements focus on operational clarity, not visual redesign
-The next console iteration will add filtering, hierarchy navigation, and richer drilldowns while keeping the current visual system.
+### 5. Operator console improvements will prioritize triage-first architecture over homepage breadth
+The dashboard SHALL prioritize urgent runs, active runs, recent activity, and explicit investigation actions ahead of secondary admin/debugging surfaces.
 
 Why:
-- The current console already communicates well visually.
-- The main missing value is operator workflow depth, not styling.
+- Operators need the homepage to answer what is broken, active, and actionable within seconds.
+- The current dashboard spreads attention across triage, files, ingest docs, and system exposition, which increases scan cost.
 
 Alternative considered:
-- Full redesign. Rejected because it adds churn without addressing the main product gaps.
+- Keep the current broad dashboard and only tune styling. Rejected because the problem is prioritization and workflow hierarchy, not cosmetics.
 
-### 6. Verification will combine contract tests, parser fixtures, and end-to-end flows
-Testing will cover three layers:
+### 6. Operator-facing language will use direct operational terminology
+The console SHALL favor plain labels like runs, failed, running, lineage, recent activity, and view run over metaphor-heavy labels.
+
+Why:
+- The console is an operational tool, not a marketing page.
+- Translation cost matters when users are scanning for failures or blocked work.
+
+Alternative considered:
+- Preserve the current themed terminology for brand flavor. Rejected because it slows comprehension and obscures the core job-to-be-done.
+
+### 7. Admin/integration concerns will move out of the main dashboard flow
+Operator-facing dashboard views SHALL separate triage and investigation from ingestion contract details, backend/source diagnostics, and other admin/integration content.
+
+Why:
+- Operators, integrators, and platform admins overlap but do not share the same first-screen needs.
+- Mixing those concerns makes the homepage feel like an internal system demo rather than a sharp control surface.
+
+Alternative considered:
+- Keep all information on one page for transparency. Rejected because transparency without prioritization hurts usability.
+
+### 8. Verification will combine contract tests, parser fixtures, end-to-end flows, and browser-based UX checks
+Testing will cover four layers:
 - ingestion contract/API tests
 - projection and persistence tests
 - end-to-end runtime-to-dashboard flows
+- browser-based UX checks for dashboard hierarchy, labeling, state prioritization, empty/error handling, and core operator tasks
 
 Why:
 - The current system combines schema validation, event projection, and inferred runtime parsing.

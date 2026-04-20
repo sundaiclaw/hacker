@@ -67,9 +67,24 @@ export type RunSummary = {
   childCount: number;
 };
 
+export type FreshnessState = "live" | "reconnecting" | "stale";
+
+export type DashboardSystemStatus = {
+  sourceMode: ObservabilitySourceMode;
+  sourceLabel: string;
+  storageDriver: "postgres" | "sqlite";
+  freshnessState: FreshnessState;
+  lastUpdatedAt: string | null;
+};
+
 export type DashboardData = {
   runs: RunSummary[];
   events: ObservatoryEvent[];
+  runInventory: RunSummary[];
+  needsAttentionRuns: RunSummary[];
+  activeRuns: RunSummary[];
+  recentActivity: ObservatoryEvent[];
+  systemStatus: DashboardSystemStatus;
   changedFiles: string[];
   summary: {
     totalRuns: number;
@@ -89,6 +104,15 @@ export type DashboardData = {
   };
 };
 
+export type RunInvestigation = {
+  kind: "failure-evidence" | "current-state" | "completion-context";
+  title: string;
+  description: string;
+  latestEvent: ObservatoryEvent | null;
+  failedCommand: ObservatoryCommand | null;
+  failedCommandAnchorId: string | null;
+};
+
 export type RunDetail = {
   run: RunSummary;
   parentRun: RunSummary | null;
@@ -96,12 +120,35 @@ export type RunDetail = {
   events: ObservatoryEvent[];
   commands: ObservatoryCommand[];
   changedFiles: string[];
+  failedCommands: ObservatoryCommand[];
+  latestEvent: ObservatoryEvent | null;
+  systemStatus: DashboardSystemStatus;
+  investigation: RunInvestigation;
 };
 
 export type DashboardQuery = {
   filters?: DashboardFilters;
   authContext?: ViewerAuthContext;
 };
+
+const canonicalRunStatuses: RunStatus[] = [
+  "queued",
+  "planning",
+  "building",
+  "verifying",
+  "deploying",
+  "waiting",
+  "done",
+  "failed",
+];
+
+const canonicalRunStages: RunStage[] = ["plan", "build", "verify", "deploy", "observe", "done"];
+
+const canonicalRunOwners: RunKind[] = ["main", "subagent", "reviewer", "system"];
+
+const canonicalSourceModes: ObservabilitySourceMode[] = ["demo", "runtime-adapter", "hosted"];
+
+const LIVE_FRESHNESS_WINDOW_MS = 60_000;
 
 const dataDir = path.join(process.cwd(), "data", "observability");
 const demoEventsFile = path.join(dataDir, "demo-events.jsonl");
@@ -293,7 +340,7 @@ const trackedFiles = [
   "src/app/api/stream/route.ts",
   "src/app/api/runs/[id]/route.ts",
   "src/app/runs/[id]/page.tsx",
-  "src/proxy.ts",
+  "src/middleware.ts",
 ];
 
 export async function ensureObservabilityStore() {
@@ -338,7 +385,16 @@ export async function appendEvent(input: ObservatoryEventInput) {
     environmentId: identity.environmentId,
     runtimeId: identity.runtimeId,
   });
-  const existingRun = await getRunRow(event.runId, { sourceModes: [sourceMode] });
+  const existingRun = await getRunRow(event.runId, {
+    sourceModes: [sourceMode],
+    scopes: [
+      {
+        projectId: identity.projectId,
+        environmentId: identity.environmentId,
+        runtimeId: identity.runtimeId,
+      },
+    ],
+  });
 
   await ingestTelemetryRecords({
     requestId: `legacy-${event.id}`,
@@ -393,45 +449,59 @@ export async function getDashboardData(query: DashboardQuery = {}): Promise<Dash
   const authContext = query.authContext ?? (await authenticateViewerRequest(new Headers()));
   const active = await resolveActiveSource();
   const scopeFilter = buildScopeFilter(authContext);
+  const selectedSourceModes = resolveSelectedSourceModes(active.sourceMode, query.filters);
+  const selectedSourceMode = selectedSourceModes.length === 1 ? selectedSourceModes[0] : active.sourceMode;
   const allRuns = await listRunRows({
     scopes: scopeFilter,
-    sourceModes: [active.sourceMode],
+    sourceModes: selectedSourceModes,
   });
   const runs = query.filters
     ? await listRunRows({
         filters: query.filters,
         scopes: scopeFilter,
-        sourceModes: [active.sourceMode],
+        sourceModes: selectedSourceModes,
       })
     : allRuns;
   const events = (await listEventRows({
     scopes: scopeFilter,
-    sourceModes: [active.sourceMode],
+    sourceModes: selectedSourceModes,
   })).slice(-20);
   const childCounts = buildChildCountIndex(allRuns);
   const mappedRuns = runs.map((row) => mapRunRow(row, childCounts));
   const allMappedRuns = allRuns.map((row) => mapRunRow(row, childCounts));
   const mappedEvents = events.map(mapEventRow);
+  const storageDriver = hasExternalDatabase() ? "postgres" : "sqlite";
+  const needsAttentionRuns = allMappedRuns.filter((run) => run.status === "failed" || run.status === "waiting");
+  const activeRuns = allMappedRuns.filter((run) =>
+    ["queued", "planning", "building", "verifying", "deploying"].includes(run.status)
+  );
+  const lastUpdatedAt = resolveLastUpdatedAt(allMappedRuns, mappedEvents);
+  const systemStatus = buildSystemStatus(selectedSourceMode, storageDriver, lastUpdatedAt);
 
   return {
     runs: mappedRuns,
     events: mappedEvents,
-    changedFiles: active.changedFiles,
+    runInventory: mappedRuns,
+    needsAttentionRuns,
+    activeRuns,
+    recentActivity: [...mappedEvents].reverse(),
+    systemStatus,
+    changedFiles: selectedSourceMode === "runtime-adapter" ? active.changedFiles : trackedFiles,
     summary: {
       totalRuns: mappedRuns.length,
       activeRuns: mappedRuns.filter((run) => !["done", "failed"].includes(run.status)).length,
       completedRuns: mappedRuns.filter((run) => run.status === "done").length,
       failedRuns: mappedRuns.filter((run) => run.status === "failed").length,
     },
-    sourceMode: active.sourceMode,
-    sourceLabel: getSourceModeLabel(active.sourceMode),
-    source: active.sourceMode,
-    storage: hasExternalDatabase() ? "postgres" : "sqlite",
+    sourceMode: selectedSourceMode,
+    sourceLabel: getSourceModeLabel(selectedSourceMode),
+    source: selectedSourceMode,
+    storage: storageDriver,
     filters: {
-      status: uniqueSorted(allMappedRuns.map((run) => run.status)),
-      stage: uniqueSorted(allMappedRuns.map((run) => run.stage)),
-      source: uniqueSorted(allMappedRuns.map((run) => run.sourceMode)),
-      owner: uniqueSorted(allMappedRuns.map((run) => run.owner)),
+      status: uniqueSorted([...canonicalRunStatuses, ...allMappedRuns.map((run) => run.status)]),
+      stage: uniqueSorted([...canonicalRunStages, ...allMappedRuns.map((run) => run.stage)]),
+      source: uniqueSorted([...canonicalSourceModes, ...allMappedRuns.map((run) => run.sourceMode)]),
+      owner: uniqueSorted([...canonicalRunOwners, ...allMappedRuns.map((run) => run.owner)]),
     },
   };
 }
@@ -473,14 +543,28 @@ export async function getRunDetail(runId: string, query: { authContext?: ViewerA
   const events = await getRunEventRows(runId, { scopes: scopeFilter, sourceModes: [selectedSourceMode] });
   const commands = await getRunCommandRows(runId, { scopes: scopeFilter, sourceModes: [selectedSourceMode] });
   const childCounts = buildChildCountIndex([runRow, ...childRows, ...(parentRow ? [parentRow] : [])]);
+  const mappedRun = mapRunRow(runRow, childCounts);
+  const mappedEvents = events.map(mapEventRow);
+  const mappedCommands = commands.map((row) => redactCommandForViewer(mapCommandRow(row), authContext));
+  const failedCommands = mappedCommands.filter((command) => command.status === "failed");
+  const latestEvent = mappedEvents.at(-1) ?? null;
+  const systemStatus = buildSystemStatus(
+    selectedSourceMode,
+    hasExternalDatabase() ? "postgres" : "sqlite",
+    resolveLastUpdatedAt([mappedRun], mappedEvents)
+  );
 
   return {
-    run: mapRunRow(runRow, childCounts),
+    run: mappedRun,
     parentRun: parentRow ? mapRunRow(parentRow, childCounts) : null,
     childRuns: childRows.map((row) => mapRunRow(row, childCounts)),
-    events: events.map(mapEventRow),
-    commands: commands.map((row) => redactCommandForViewer(mapCommandRow(row), authContext)),
+    events: mappedEvents,
+    commands: mappedCommands,
     changedFiles: selectedSourceMode === "runtime-adapter" ? active.changedFiles : trackedFiles,
+    failedCommands,
+    latestEvent,
+    systemStatus,
+    investigation: buildRunInvestigation(mappedRun, mappedEvents, failedCommands),
   };
 }
 
@@ -489,9 +573,10 @@ export async function getRecentCommands(query: DashboardQuery = {}) {
   const authContext = query.authContext ?? (await authenticateViewerRequest(new Headers()));
   const active = await resolveActiveSource();
   const scopeFilter = buildScopeFilter(authContext);
+  const selectedSourceModes = resolveSelectedSourceModes(active.sourceMode, query.filters);
   const commands = (await listCommandRows({
     scopes: scopeFilter,
-    sourceModes: [active.sourceMode],
+    sourceModes: selectedSourceModes,
   })).slice(-50);
   return commands.map((row) => redactCommandForViewer(mapCommandRow(row), authContext));
 }
@@ -791,6 +876,104 @@ function extractDemoTask(events: ObservatoryEvent[]) {
 
 function uniqueSorted(values: string[]) {
   return [...new Set(values)].sort((left, right) => left.localeCompare(right));
+}
+
+function resolveSelectedSourceModes(
+  activeSourceMode: ObservabilitySourceMode,
+  filters?: DashboardFilters
+): ObservabilitySourceMode[] {
+  return filters?.sourceModes?.length ? [...new Set(filters.sourceModes)] : [activeSourceMode];
+}
+
+function buildSystemStatus(
+  sourceMode: ObservabilitySourceMode,
+  storageDriver: "postgres" | "sqlite",
+  lastUpdatedAt: string | null
+): DashboardSystemStatus {
+  return {
+    sourceMode,
+    sourceLabel: getSourceModeLabel(sourceMode),
+    storageDriver,
+    freshnessState: resolveFreshnessState(lastUpdatedAt),
+    lastUpdatedAt,
+  };
+}
+
+function resolveLastUpdatedAt(runs: RunSummary[], events: ObservatoryEvent[]) {
+  const latestRun = runs[0]?.updatedAt;
+  const latestEvent = events.at(-1)?.ts;
+  const timestamps = [latestRun, latestEvent].filter((value): value is string => Boolean(value));
+
+  if (timestamps.length === 0) {
+    return null;
+  }
+
+  return timestamps.reduce((latest, value) =>
+    new Date(value).getTime() > new Date(latest).getTime() ? value : latest
+  );
+}
+
+function resolveFreshnessState(lastUpdatedAt: string | null): FreshnessState {
+  if (!lastUpdatedAt) {
+    return "stale";
+  }
+
+  const ageMs = Date.now() - new Date(lastUpdatedAt).getTime();
+  if (ageMs <= LIVE_FRESHNESS_WINDOW_MS) {
+    return "live";
+  }
+
+  return "stale";
+}
+
+function buildRunInvestigation(
+  run: RunSummary,
+  events: ObservatoryEvent[],
+  failedCommands: ObservatoryCommand[]
+): RunInvestigation {
+  const latestEvent = events.at(-1) ?? null;
+  const latestFailedEvent = [...events].reverse().find((event) => event.status === "failed" || /failed/i.test(event.type));
+  const failedCommand = failedCommands.at(-1) ?? null;
+
+  if (run.status === "failed") {
+    return {
+      kind: "failure-evidence",
+      title: "Failure evidence",
+      description: failedCommand
+        ? "Review the failed command first, then use the linked command section for full timing and output context."
+        : "This run failed without a captured failed command. Review the latest failed event for the clearest evidence.",
+      latestEvent: latestFailedEvent ?? latestEvent,
+      failedCommand,
+      failedCommandAnchorId: failedCommand ? getCommandAnchorId(failedCommand.id) : null,
+    };
+  }
+
+  if (["queued", "planning", "building", "verifying", "deploying", "waiting"].includes(run.status)) {
+    return {
+      kind: "current-state",
+      title: "Current state",
+      description:
+        run.status === "waiting"
+          ? "This run is waiting for the next action or dependency. Review the latest event and lineage before intervening."
+          : "Review the latest event and current owner to understand where execution is progressing right now.",
+      latestEvent,
+      failedCommand,
+      failedCommandAnchorId: failedCommand ? getCommandAnchorId(failedCommand.id) : null,
+    };
+  }
+
+  return {
+    kind: "completion-context",
+    title: "Completion context",
+    description: "This run finished successfully. Review the latest meaningful event and any attached commands for completion context.",
+    latestEvent,
+    failedCommand,
+    failedCommandAnchorId: failedCommand ? getCommandAnchorId(failedCommand.id) : null,
+  };
+}
+
+export function getCommandAnchorId(commandId: string) {
+  return `command-${commandId.replace(/[^a-zA-Z0-9_-]/g, "-")}`;
 }
 
 function sanitizeRuntimeId(input: string) {

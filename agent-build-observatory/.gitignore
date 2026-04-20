@@ -40,6 +40,11 @@ next-env.d.ts
 
 # observability runtime artifacts
 .workflow/
+.runtime/
 data/observability/*.db
 data/observability/*.db-shm
 data/observability/*.db-wal
+
+# browser and workflow scratch artifacts
+test-results/
+playwright-report/

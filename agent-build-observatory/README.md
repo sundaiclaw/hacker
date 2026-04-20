@@ -24,6 +24,7 @@ Hosted telemetry is the canonical production path. Runtime scraping remains a lo
 - first-class command telemetry and failed-command promotion
 - retention pruning for old observability records
 - incremental SSE updates with snapshot + delta messages
+- separate `/admin` surface for ingestion contract and storage posture so the main dashboard stays triage-first
 
 ## Configuration
 
@@ -206,6 +207,12 @@ OBSERVABILITY_REQUIRE_VIEWER_AUTH=true \
 npm run storage:init && npm run start
 ```
 
+## Operator surfaces
+
+- `/` — triage-first operator dashboard in this order: system status, needs attention, active runs, recent activity, runs inventory
+- `/runs/[id]` — run summary, state-specific investigation content, lineage, failed commands, and remaining activity
+- `/admin` — ingestion contract, storage posture, and auth/config status kept off the main operator flow
+
 ## Verification
 
 Focused commands:
@@ -220,6 +227,7 @@ npm run test:retention
 npm run test:parser
 npm run test:projection
 npm run test:e2e
+npm run test:browser
 ```
 
 All observability verification:
@@ -231,7 +239,8 @@ npm run verify
 Verification contract:
 
 - `npm run typecheck` checks tracked TypeScript source and scripts without depending on generated `.next/types` state
-- `npm run test:observability` runs the storage, API, retention, parser, projection, and e2e node test suites
+- `npm run test:observability` runs the storage, API, retention, parser, projection, e2e, and browser UX test suites
+- `npm run test:browser` builds the app, starts a production server with scoped viewer/producer credentials, and runs Playwright UX checks
 - `npm run build` verifies the local Next.js production build, including generation of `.next/standalone/`
 - external deployment-time artifact copying should be treated as a separate environment check; this repo only verifies standalone output generation locally
 

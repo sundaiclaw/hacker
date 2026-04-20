@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
+import { extractViewerCredentials } from "@/lib/observability-auth-shared";
 
 export async function proxy(request: NextRequest) {
   const viewerAuthRequired = resolveBoolean(
@@ -12,7 +13,7 @@ export async function proxy(request: NextRequest) {
   }
 
   const viewers = parseViewerCredentials(process.env.OBSERVABILITY_VIEWER_CREDENTIALS_JSON);
-  const credentials = parseBasicAuth(request.headers.get("authorization"));
+  const credentials = extractViewerCredentials(request.headers);
 
   if (credentials && viewers.some((viewer) => viewer.username === credentials.username && viewer.password === credentials.password)) {
     return NextResponse.next();
@@ -32,14 +33,16 @@ export async function proxy(request: NextRequest) {
     );
   }
 
-  return new NextResponse(null, {
+  return new NextResponse(renderUnauthorizedHtml(), {
     status: 401,
-    headers: viewerChallengeHeaders(),
+    headers: {
+      "Content-Type": "text/html; charset=utf-8",
+    },
   });
 }
 
 export const config = {
-  matcher: ["/", "/runs/:path*", "/api/dashboard", "/api/runs/:path*", "/api/stream"],
+  matcher: ["/", "/admin/:path*", "/runs/:path*", "/api/dashboard", "/api/runs/:path*", "/api/stream"],
 };
 
 function resolveBoolean(raw: string | undefined, fallback: boolean) {
@@ -72,28 +75,69 @@ function parseViewerCredentials(raw: string | undefined) {
   }
 }
 
-function parseBasicAuth(authorizationHeader: string | null) {
-  if (!authorizationHeader) return null;
-  const [scheme, encoded] = authorizationHeader.split(/\s+/, 2);
-  if (scheme?.toLowerCase() !== "basic" || !encoded) {
-    return null;
-  }
-
-  try {
-    const decoded = atob(encoded);
-    const separator = decoded.indexOf(":");
-    if (separator === -1) return null;
-    return {
-      username: decoded.slice(0, separator),
-      password: decoded.slice(separator + 1),
-    };
-  } catch {
-    return null;
-  }
-}
-
 function viewerChallengeHeaders() {
   return {
     "WWW-Authenticate": 'Basic realm="Build Observatory"',
   };
+}
+
+function renderUnauthorizedHtml() {
+  return `<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Viewer access required</title>
+    <style>
+      :root {
+        color-scheme: dark;
+        font-family: Inter, system-ui, sans-serif;
+        background: #050a12;
+        color: #ecf2ff;
+      }
+      body {
+        margin: 0;
+        min-height: 100vh;
+        display: grid;
+        place-items: center;
+        background: radial-gradient(circle at top, rgba(56, 189, 248, 0.12), transparent 24%), linear-gradient(180deg, #08101b 0%, #050a12 45%, #04070d 100%);
+      }
+      main {
+        width: min(640px, calc(100vw - 2rem));
+        border: 1px solid rgba(255,255,255,0.1);
+        border-radius: 24px;
+        background: rgba(12, 20, 34, 0.94);
+        box-shadow: 0 24px 90px rgba(2,6,23,0.46);
+        padding: 28px;
+      }
+      p.eyebrow {
+        margin: 0;
+        color: rgba(186, 230, 253, 0.8);
+        font-size: 11px;
+        letter-spacing: 0.24em;
+        text-transform: uppercase;
+      }
+      h1 {
+        margin: 12px 0 0;
+        font-size: 2rem;
+      }
+      p.copy {
+        margin: 16px 0 0;
+        color: rgba(203, 213, 225, 0.82);
+        line-height: 1.7;
+      }
+      code {
+        font-family: "JetBrains Mono", ui-monospace, monospace;
+        color: #bae6fd;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <p class="eyebrow">Authorization required</p>
+      <h1>Viewer access required</h1>
+      <p class="copy">This observability view is protected. Provide valid viewer credentials for this scope, then reload the page. API requests return a <code>viewer_auth_required</code> error instead of an empty dataset.</p>
+    </main>
+  </body>
+</html>`;
 }

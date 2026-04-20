@@ -60,30 +60,14 @@ export function createSnapshotMessage(state: LiveState): LiveMessage {
 }
 
 export function diffLiveState(previous: LiveState, next: LiveState): LiveMessage[] {
-  const messages: LiveMessage[] = [];
-  const previousRuns = new Map(previous.data.runs.map((run) => [run.id, JSON.stringify(run)]));
-  const previousEvents = new Set(previous.data.events.map((event) => event.id));
-  const previousCommands = new Map(previous.commands.map((command) => [command.id, JSON.stringify(command)]));
-
-  for (const run of next.data.runs) {
-    if (previousRuns.get(run.id) !== JSON.stringify(run)) {
-      messages.push({ type: "run.upsert", cursor: next.cursor, run });
-    }
+  if (
+    JSON.stringify(previous.data) !== JSON.stringify(next.data) ||
+    JSON.stringify(previous.commands) !== JSON.stringify(next.commands)
+  ) {
+    return [createSnapshotMessage(next)];
   }
 
-  for (const event of next.data.events) {
-    if (!previousEvents.has(event.id)) {
-      messages.push({ type: "event.append", cursor: next.cursor, event });
-    }
-  }
-
-  for (const command of next.commands) {
-    if (previousCommands.get(command.id) !== JSON.stringify(command)) {
-      messages.push({ type: "command.upsert", cursor: next.cursor, command });
-    }
-  }
-
-  return messages;
+  return [];
 }
 
 function buildCursor(data: DashboardData, commands: ObservatoryCommand[]): LiveCursor {

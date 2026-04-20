@@ -21,14 +21,18 @@
 
 ## 4. Operator console improvements
 
-- [ ] 4.1 Add run inventory filters for status, stage, source, and owner
-- [ ] 4.2 Add parent-child run hierarchy navigation to dashboard and run detail
-- [ ] 4.3 Improve run-detail inspection for failed commands and related operational context
-- [ ] 4.4 Make source mode labeling explicit across dashboard and run-detail views
+- [ ] 4.1 Rework the dashboard into a triage-first layout with needs-attention, active-runs, recent-activity, and runs inventory sections
+- [ ] 4.2 Add explicit row/card actions for investigation flows such as View run, View failed command, and View parent
+- [ ] 4.3 Simplify operator-facing labels and headings across dashboard and run detail into plain operational language
+- [ ] 4.4 Move ingestion contract and similar admin/integration content out of the main operator dashboard flow
+- [ ] 4.5 Improve run-detail inspection so failure evidence, lineage, and recommended next actions appear before secondary metadata
+- [ ] 4.6 Make source mode freshness/status visible in a compact system-status strip rather than broad explanatory sections
+- [ ] 4.7 Reduce mobile and desktop scan cost by trimming decorative chrome, nested cards, and low-priority metadata density while preserving fast access to needs-attention and active runs
 
 ## 5. Verification and rollout
 
 - [ ] 5.1 Add ingestion contract tests covering valid and invalid producer submissions
 - [ ] 5.2 Add fixture-driven runtime parser tests for local adapter mode
 - [ ] 5.3 Add end-to-end tests from telemetry ingestion through dashboard/run-detail projection
-- [x] 5.4 Document deployment, rollback, and local-development modes for hosted observability
+- [ ] 5.4 Add browser-based UX checks covering dashboard triage order, navigation affordances, and run-detail investigation flows
+- [x] 5.5 Document deployment, rollback, and local-development modes for hosted observability

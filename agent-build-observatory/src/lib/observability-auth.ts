@@ -6,6 +6,7 @@ import {
   type ObservabilityScopeRule,
   type ObservabilityViewerCredential,
 } from "@/lib/observability-config";
+import { extractViewerCredentials } from "@/lib/observability-auth-shared";
 
 export class ObservabilityHttpError extends Error {
   status: number;
@@ -70,7 +71,7 @@ export async function authenticateViewerRequest(
     return buildViewerBypassContext();
   }
 
-  const credentials = parseBasicAuth(headers.get("authorization"));
+  const credentials = extractViewerCredentials(headers);
   const viewer = credentials
     ? findViewerCredential(runtimeConfig.viewers, credentials.username, credentials.password)
     : undefined;
@@ -137,26 +138,6 @@ function parseBearerToken(authorizationHeader: string | null) {
     return null;
   }
   return token;
-}
-
-function parseBasicAuth(authorizationHeader: string | null) {
-  if (!authorizationHeader) return null;
-  const [scheme, encoded] = authorizationHeader.split(/\s+/, 2);
-  if (scheme?.toLowerCase() !== "basic" || !encoded) {
-    return null;
-  }
-
-  try {
-    const decoded = Buffer.from(encoded, "base64").toString("utf8");
-    const separator = decoded.indexOf(":");
-    if (separator === -1) return null;
-    return {
-      username: decoded.slice(0, separator),
-      password: decoded.slice(separator + 1),
-    };
-  } catch {
-    return null;
-  }
 }
 
 function findProducerCredential(credentials: ObservabilityProducerCredential[], token: string) {

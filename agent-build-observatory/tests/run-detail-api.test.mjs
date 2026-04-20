@@ -7,14 +7,17 @@ installAliasHooks();
 const observability = await import("../src/lib/observability.ts");
 const route = await import("../src/app/api/runs/[id]/route.ts");
 
-test("getRunDetail exposes failed command telemetry on a run", async () => {
+test("getRunDetail exposes failed command telemetry and state-specific investigation data on a run", async () => {
   const detail = await observability.getRunDetail("run_demo_polish");
 
   assert.ok(detail);
   assert.equal(detail.run.id, "run_demo_polish");
   assert.equal(detail.run.status, "failed");
+  assert.equal(detail.investigation.kind, "failure-evidence");
+  assert.equal(detail.systemStatus.sourceMode, "demo");
   assert.ok(Array.isArray(detail.commands));
   assert.equal(detail.commands.length, 1);
+  assert.equal(detail.failedCommands.length, 1);
 
   const failedCommand = detail.commands[0];
   assert.equal(failedCommand.label, "npm run lint");
@@ -32,6 +35,7 @@ test("run detail API returns command payload for failed inspection", async () =>
 
   const payload = await response.json();
   assert.equal(payload.run.id, "run_demo_polish");
+  assert.equal(payload.investigation.kind, "failure-evidence");
   assert.ok(Array.isArray(payload.commands));
   assert.equal(payload.commands.length, 1);
   assert.deepEqual(
@@ -44,7 +48,6 @@ test("run detail API returns command payload for failed inspection", async () =>
   );
   assert.match(payload.commands[0].logSummary, /Lint failed/i);
 });
-
 
 test("hosted run detail lookups do not fall back to demo data", async () => {
   await withTempObservabilityEnv({}, async () => {
