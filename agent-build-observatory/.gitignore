@@ -30,6 +30,12 @@ yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
 
+# local runtime / observability artifacts
+.runtime/
+data/observability/*.db
+data/observability/*.db-shm
+data/observability/*.db-wal
+
 # env files (can opt-in for committing if needed)
 .env*
 
