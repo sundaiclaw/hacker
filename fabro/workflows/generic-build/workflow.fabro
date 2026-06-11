@@ -233,6 +233,20 @@ If any fail, write a compact actionable list to $workflow_dir/verify_errors.log 
         ]
         gate_test [shape=diamond, label="Tests OK?"]
 
+        design_tests [
+            label="Design Tests",
+            prompt="@prompts/design-tests.md"
+        ]
+
+        run_test_workflow [
+            shape=house,
+            label="Run Custom Tests",
+            stack.child_dotfile="$workflow_dir/test-workflow.fabro",
+            manager.max_cycles=50,
+            manager.poll_interval=30s
+        ]
+        gate_custom_tests [shape=diamond, label="Custom Tests OK?"]
+
         verify_typecheck [
             shape=parallelogram,
             label="Typecheck",
@@ -358,8 +372,13 @@ Respond with:\n\
     fix_lints -> verify_lint
 
     verify_test -> gate_test
-    gate_test -> verify_typecheck [condition="outcome=success"]
+    gate_test -> design_tests [condition="outcome=success"]
     gate_test -> implement
+
+    design_tests -> run_test_workflow
+    run_test_workflow -> gate_custom_tests
+    gate_custom_tests -> verify_typecheck [condition="outcome=success"]
+    gate_custom_tests -> implement
 
     verify_typecheck -> gate_typecheck
     gate_typecheck -> verify_build [condition="outcome=success"]
