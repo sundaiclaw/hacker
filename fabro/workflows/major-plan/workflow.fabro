@@ -1,0 +1,106 @@
+digraph MajorPlan {
+    graph [
+        goal="Produce the major plan at openspec/major/$major_version/plan.md for a release-train repo. \
+Invoked only at major start or major replan (@sundaibot major). Read the prior major plan (if one \
+exists) and any product context docs ($product_context_dir) to draft goals, non-goals, constraints, \
+the ordered minor slice table, dependencies, risks, cross-slice notes, and an empty Invalidation log. \
+Use skills/release-train/references/major-plan-template.md as the structural template.",
+        rankdir=LR,
+        default_max_retry=2,
+        retry_target="draft_plan_fanout",
+        fallback_retry_target="draft_plan_fanout",
+        model_stylesheet="
+            *          { model: gpt-5.4;      }
+            .review    { model: gpt-5.4-mini; }
+            .plan-b    { model: gpt-5-mini;   }
+        "
+    ]
+
+    exit [shape=Msquare, label="Exit"]
+
+    subgraph cluster_bootstrap {
+        label="Bootstrap"
+        start [shape=Mdiamond, label="Start"]
+
+        prepare_workdirs [
+            shape=parallelogram,
+            label="Prepare Workdirs",
+            max_retries=0,
+            script="mkdir -p '$workflow_dir' 'openspec/major/$major_version' 2>&1"
+        ]
+
+        read_prior_plan [
+            label="Read Prior Plan",
+            class="review",
+            prompt="Determine the prior major to compare against.\n\
+- Current major being planned: $major_version\n\
+- If a file exists at openspec/major/$prior_major_version/plan.md, read it in full and extract:\n\
+  1. Shipped minors and their outcomes\n\
+  2. Non-goals that carried over\n\
+  3. Risks that materialized\n\
+- Also read any product context docs under $product_context_dir (README.md, ROADMAP.md, and any open tracking issues mentioned there).\n\n\
+Write a compact summary to $workflow_dir/prior_plan_summary.md. Keep it under 500 lines. Do not invent content beyond what the source files say."
+        ]
+    }
+
+    subgraph cluster_draft {
+        label="Draft (fanout)"
+        node [shape=box]
+
+        draft_plan_fanout [shape=component, label="Draft Fan-Out"]
+
+        draft_plan_a [
+            label="Draft Plan A",
+            prompt="Draft openspec/major/$major_version/plan.md using skills/release-train/references/major-plan-template.md as the template.\n\n\
+Inputs:\n\
+- $workflow_dir/prior_plan_summary.md (may be empty for v0)\n\
+- $product_context_dir/README.md, $product_context_dir/ROADMAP.md (if present)\n\
+- User-supplied product intent (in context)\n\n\
+Produce a complete plan covering:\n\
+1. Goals and non-goals for the major\n\
+2. Constraints (platform, compliance, deadlines)\n\
+3. Ordered minor slice table (vX.1, vX.2, ...) with one-line intent each and dependency column\n\
+4. Risks with mitigations\n\
+5. Cross-slice 'if A changes, revisit B' notes\n\
+6. Empty, append-only Invalidation log section\n\n\
+Write to $workflow_dir/draft_plan_a.md."
+        ]
+
+        draft_plan_b [
+            label="Draft Plan B",
+            class="plan-b",
+            prompt="Draft an alternative openspec/major/$major_version/plan.md.\n\n\
+Read the same inputs as Plan A, but emphasize:\n\
+- Slice sequencing that minimizes cross-impact risk\n\
+- Fewer, larger slices over many thin ones\n\
+- Explicit dependency DAG\n\n\
+Write to $workflow_dir/draft_plan_b.md."
+        ]
+
+        debate_and_write [
+            label="Debate & Write",
+            prompt="Synthesize $workflow_dir/draft_plan_a.md and $workflow_dir/draft_plan_b.md into a final major plan.\n\n\
+Use the template at skills/release-train/references/major-plan-template.md for structure. Resolve conflicts between drafts. The final plan MUST:\n\
+- Include every section of the template\n\
+- Keep the Invalidation log empty (only header + comment)\n\
+- Use relative paths for any file references\n\n\
+Write the final plan to openspec/major/$major_version/plan.md.\n\
+Also write a short rationale to $workflow_dir/debate_notes.md explaining why the chosen slice ordering won."
+        ]
+    }
+
+    approve [shape=hexagon, label="Approve Major Plan"]
+
+    start -> prepare_workdirs
+    prepare_workdirs -> read_prior_plan
+    read_prior_plan -> draft_plan_fanout
+
+    draft_plan_fanout -> draft_plan_a
+    draft_plan_fanout -> draft_plan_b
+    draft_plan_a -> debate_and_write
+    draft_plan_b -> debate_and_write
+    debate_and_write -> approve
+
+    approve -> exit            [label="[A] Approve"]
+    approve -> draft_plan_fanout [label="[R] Revise"]
+}

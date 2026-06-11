@@ -1,0 +1,18 @@
+# Default vars for the release-train ship-loop workflow.
+#
+# Resolve $release_version to the active vX.Y slice before invoking, and point
+# $spec_dir at that slice under openspec/changes/. The bot sets skip_planning
+# when a rerun does not change scope.
+
+graph = "../workflow.fabro"
+
+[vars]
+release_version = "v0.1"
+major_version   = "v0"
+spec_dir        = "openspec/changes/v0.1"
+app_dir         = "."
+workflow_dir    = ".workflow"
+skip_planning   = false
+
+[sandbox]
+default = "local"

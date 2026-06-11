@@ -1,0 +1,14 @@
+# Default vars for the major-plan workflow.
+#
+# Runs once per major start (or major replan). Writes openspec/major/$major_version/plan.md.
+
+graph = "../workflow.fabro"
+
+[vars]
+major_version        = "v0"
+prior_major_version  = ""             # empty for v0; "v0" when drafting v1; etc.
+product_context_dir  = "."
+workflow_dir         = ".workflow"
+
+[sandbox]
+default = "local"
