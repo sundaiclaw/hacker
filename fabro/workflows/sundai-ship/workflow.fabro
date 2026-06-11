@@ -9,8 +9,8 @@ All code goes in $app_dir/. After building, verify it runs and meets the design 
         retry_target="implement",
         fallback_retry_target="implement",
         model_stylesheet="
-            *          { model: gpt-5.4;  }
-            .cheap     { model: gpt-5.4;  }
+            *          { model: $default_model;  }
+            .cheap     { model: $cheap_model;    }
         "
     ]
 

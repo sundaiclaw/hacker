@@ -15,11 +15,11 @@ artifacts and workflow scratch files out of source control.",
         retry_target="plan_fanout",
         fallback_retry_target="plan_fanout",
         model_stylesheet="
-            *          { model: gpt-5.4;        }
-            .code      { model: gpt-5.3-codex;  }
-            .review    { model: gpt-5.4-mini;   }
-            .cheap     { model: gpt-5-mini;     }
-            .plan-b    { model: gpt-5-mini;     }
+            *          { model: $default_model;  }
+            .code      { model: $code_model;     }
+            .review    { model: $review_model;   }
+            .cheap     { model: $cheap_model;    }
+            .plan-b    { model: $plan_b_model;   }
         "
     ]
 

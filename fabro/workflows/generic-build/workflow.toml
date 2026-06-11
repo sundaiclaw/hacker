@@ -1,1 +1,8 @@
 version = 1
+
+[vars]
+default_model = "gpt-5.4"
+code_model = "gpt-5.3-codex"
+review_model = "gpt-5.4-mini"
+cheap_model = "gpt-5-mini"
+plan_b_model = "gpt-5-mini"
