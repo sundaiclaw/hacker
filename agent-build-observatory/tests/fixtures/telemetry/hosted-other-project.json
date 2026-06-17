@@ -1,0 +1,31 @@
+{
+  "requestId": "req-hosted-other-project-1",
+  "source": {
+    "projectId": "project-b",
+    "environmentId": "staging",
+    "runtimeId": "runtime-9",
+    "sourceMode": "hosted"
+  },
+  "run": {
+    "id": "run-other-project",
+    "task": "Stage preview deploy",
+    "status": "done",
+    "stage": "deploy",
+    "owner": "main",
+    "startedAt": "2026-04-18T10:00:00.000Z",
+    "updatedAt": "2026-04-18T10:03:00.000Z"
+  },
+  "events": [
+    {
+      "id": "evt-other-project-done",
+      "runId": "run-other-project",
+      "type": "run.completed",
+      "title": "Preview deploy finished",
+      "stage": "deploy",
+      "status": "done",
+      "owner": "main",
+      "ts": "2026-04-18T10:03:00.000Z"
+    }
+  ],
+  "commands": []
+}

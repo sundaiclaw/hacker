@@ -1,0 +1,5 @@
+{"type":"session","timestamp":"2026-04-18T12:00:00.000Z"}
+{"type":"message","timestamp":"2026-04-18T12:00:01.000Z","id":"user-1","message":{"role":"user","content":[{"type":"text","text":"Build and verify the observability dashboard."}]}}
+{"type":"message","timestamp":"2026-04-18T12:00:03.000Z","id":"assistant-1","message":{"role":"assistant","content":[{"type":"text","text":"Running the project build."},{"type":"toolCall","id":"call-build","name":"exec","arguments":{"command":"npm run build","cwd":"/workspace/app"}}],"stopReason":"tool_use"}}
+{"type":"message","timestamp":"2026-04-18T12:00:20.000Z","id":"tool-result-1","message":{"role":"toolResult","toolName":"exec","toolCallId":"call-build","content":[{"type":"text","text":"Build completed successfully"}]},"details":{"status":"done","exitCode":0,"durationMs":17000,"aggregated":"Build completed successfully","cwd":"/workspace/app"}}
+{"type":"message","timestamp":"2026-04-18T12:00:25.000Z","id":"assistant-2","message":{"role":"assistant","content":[{"type":"text","text":"I have a deployment readiness summary.","textSignature":"{\"phase\":\"final_answer\"}"}],"stopReason":"end_turn"}}

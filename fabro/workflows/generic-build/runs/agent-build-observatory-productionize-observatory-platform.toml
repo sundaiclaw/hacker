@@ -1,0 +1,7 @@
+version = 1
+graph = "../workflow.fabro"
+
+[vars]
+app_dir = "agent-build-observatory"
+spec_dir = "agent-build-observatory/openspec"
+workflow_dir = "agent-build-observatory/.workflow/productionize-observatory-platform"

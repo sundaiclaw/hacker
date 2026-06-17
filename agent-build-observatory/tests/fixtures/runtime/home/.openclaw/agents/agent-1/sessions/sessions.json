@@ -1,0 +1,19 @@
+{
+  "agent:main-run": {
+    "sessionFile": "__ROOT__/tests/fixtures/runtime/transcripts/main-session.jsonl",
+    "status": "running",
+    "startedAt": 1713441600000,
+    "updatedAt": 1713441720000,
+    "agentId": "agent-1",
+    "kind": "main"
+  },
+  "agent:child-run": {
+    "sessionFile": "__ROOT__/tests/fixtures/runtime/transcripts/child-session.jsonl",
+    "status": "failed",
+    "startedAt": 1713441750000,
+    "updatedAt": 1713441900000,
+    "spawnedBy": "agent:main-run",
+    "agentId": "agent-1",
+    "kind": "subagent"
+  }
+}

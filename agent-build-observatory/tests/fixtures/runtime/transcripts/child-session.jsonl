@@ -1,0 +1,4 @@
+{"type":"session","timestamp":"2026-04-18T12:02:00.000Z"}
+{"type":"message","timestamp":"2026-04-18T12:02:01.000Z","id":"user-2","message":{"role":"user","content":[{"type":"text","text":"Investigate the failed smoke test and report findings."}]}}
+{"type":"message","timestamp":"2026-04-18T12:02:05.000Z","id":"assistant-3","message":{"role":"assistant","content":[{"type":"text","text":"Running smoke verification."},{"type":"toolCall","id":"call-smoke","name":"exec","arguments":{"command":"npm run smoke","cwd":"/workspace/app"}}],"stopReason":"tool_use"}}
+{"type":"message","timestamp":"2026-04-18T12:03:05.000Z","id":"tool-result-2","isError":true,"message":{"role":"toolResult","toolName":"exec","toolCallId":"call-smoke","content":[{"type":"text","text":"Smoke test failed"}]},"details":{"status":"failed","exitCode":1,"durationMs":60000,"aggregated":"Smoke test failed: stack trace...","cwd":"/workspace/app"}}

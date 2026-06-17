@@ -131,6 +131,31 @@ export function StatusBadge({ status }: { status?: string }) {
   );
 }
 
+export function EmptyState({
+  title,
+  message,
+  action,
+  tone = "default",
+}: {
+  title: string;
+  message: string;
+  action?: ReactNode;
+  tone?: "default" | "warning";
+}) {
+  const palette =
+    tone === "warning"
+      ? "border-amber-400/22 bg-amber-400/[0.06]"
+      : "border-white/8 bg-white/[0.025]";
+
+  return (
+    <div className={cx("rounded-[1.15rem] border px-4 py-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]", palette)}>
+      <p className="text-sm font-medium text-white">{title}</p>
+      <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-400">{message}</p>
+      {action ? <div className="mt-4">{action}</div> : null}
+    </div>
+  );
+}
+
 export function TimelineEventCard({
   title,
   eyebrow,
@@ -140,6 +165,7 @@ export function TimelineEventCard({
   status,
   stage,
   owner,
+  sourceLabel,
   className,
 }: {
   title: string;
@@ -150,6 +176,7 @@ export function TimelineEventCard({
   status?: string;
   stage?: string;
   owner?: string;
+  sourceLabel?: string;
   className?: string;
 }) {
   const tone = getStatusTone(status);
@@ -168,6 +195,7 @@ export function TimelineEventCard({
               {status ? <StatusBadge status={status} /> : null}
               {stage ? <InfoPill tone="muted">{stage}</InfoPill> : null}
               {owner ? <InfoPill tone="muted">{owner}</InfoPill> : null}
+              {sourceLabel ? <InfoPill tone="accent">{sourceLabel}</InfoPill> : null}
               {runId ? <InfoPill tone="muted">{runId}</InfoPill> : null}
             </div>
           </div>
